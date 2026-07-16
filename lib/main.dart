@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/home_screen.dart';
 
 void main() {
   runApp(const SoloShuttleApp());
@@ -10,18 +11,13 @@ class SoloShuttleApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text("SoloShuttle"),
-        ),
-        body: const Center(
-          child: Text(
-            "Welcome to SoloShuttle 🚀",
-            style: TextStyle(fontSize: 24),
-          ),
-        ),
-      ),
-    );
+  debugShowCheckedModeBanner: false,
+  theme: ThemeData(
+    brightness: Brightness.dark,
+    scaffoldBackgroundColor: const Color(0xFF0D0D0D),
+    useMaterial3: true,
+  ),
+  home: const HomeScreen(),
+);
   }
 }
