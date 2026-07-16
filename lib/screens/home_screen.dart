@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:soloshuttle/screens/drills_screen.dart';
+import 'drills_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -141,23 +143,34 @@ class HomeScreen extends StatelessWidget {
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 childAspectRatio: 1.15,
-                children: const [
+                children: [
                   
                   FeatureCard(
                     image: "assets/images/icons/solo_drills.png",
                     title: "Solo Drills",
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const DrillsScreen(),
+                       ),
+                      );
+                    },
                   ),
                   FeatureCard(
                     image: "assets/images/icons/footwork.png",
                     title: "Footwork",
+                    onTap: () {},
                   ),
                   FeatureCard(
                     image: "assets/images/icons/voice_coach.png",
                     title: "Voice Coach",
+                    onTap: () {},
                   ),
                   FeatureCard(
                     image: "assets/images/icons/tutorials.png",
                     title: "Tutorials",
+                    onTap: () {},
                   ),
                 ],
               ),
@@ -199,46 +212,51 @@ class HomeScreen extends StatelessWidget {
 class FeatureCard extends StatelessWidget {
   final String image;
   final String title;
+  final VoidCallback? onTap;
 
   const FeatureCard({
     super.key,
     required this.image,
     required this.title,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A2433),
-        borderRadius: BorderRadius.circular(20),
-       boxShadow: [
-        BoxShadow(
-         color: Colors.black26,
-        blurRadius: 12,
-        offset: Offset(0, 6),
-      ),
-   ],
-),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-           image,
-           width: 80,
-           height: 80,
-           fit: BoxFit.contain,
-          ),
-          const SizedBox(height: 18),
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A2433),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 12,
+              offset: Offset(0, 6),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              image,
+              width: 80,
+              height: 80,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 18),
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
