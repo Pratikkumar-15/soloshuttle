@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:soloshuttle/screens/drills_screen.dart';
-import 'drills_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
