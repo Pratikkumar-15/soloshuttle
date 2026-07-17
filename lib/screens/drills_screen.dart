@@ -353,7 +353,7 @@ Widget categoryCard(
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.20),
+            color: Colors.black.withValues(alpha: .20),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -368,7 +368,7 @@ Widget categoryCard(
             height: 58,
             width: 58,
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(.12),
+              color: Colors.green.withValues(alpha: .12),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -413,7 +413,7 @@ Widget categoryCard(
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(.15),
+                  color: Colors.green.withValues(alpha: .15),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(

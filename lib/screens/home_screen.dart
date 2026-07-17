@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:soloshuttle/screens/drills_screen.dart';
+import 'package:soloshuttle/screens/footwork_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -159,7 +160,14 @@ class HomeScreen extends StatelessWidget {
                   FeatureCard(
                     image: "assets/images/icons/footwork.png",
                     title: "Footwork",
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const FootworkScreen(),
+                        ),
+                      );
+                    },
                   ),
                   FeatureCard(
                     image: "assets/images/icons/voice_coach.png",
