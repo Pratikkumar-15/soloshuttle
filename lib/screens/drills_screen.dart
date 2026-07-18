@@ -1,31 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../core/theme/app_colors.dart';
+import '../providers/training_provider.dart';
+import '../providers/user_provider.dart';
+import '../domain/entities/drill.dart';
+import '../presentation/widgets/app_card.dart';
+import '../presentation/widgets/app_button.dart';
+import '../presentation/widgets/badge_tag.dart';
+import '../presentation/widgets/section_title.dart';
+import '../presentation/widgets/stat_card.dart';
+import '../presentation/widgets/gradient_hero_card.dart';
+import '../presentation/screens/active_drill_session_screen.dart';
 
 class DrillsScreen extends StatelessWidget {
   const DrillsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0B1220),
+    final trainingProvider = Provider.of<TrainingProvider>(context);
+    final userProvider = Provider.of<UserProvider>(context);
+    final soloDrills = trainingProvider.soloDrills;
+    final favorites = trainingProvider.favoriteDrills;
+    final user = userProvider.user;
 
+    return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0B1220),
+        backgroundColor: AppColors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
         title: Row(
           children: [
-            Image.asset("assets/images/icons/solo_drills.png", width: 30),
-
+            Image.asset(
+              'assets/images/icons/solo_drills.png',
+              width: 28,
+              errorBuilder: (_, __, ___) => const Icon(Icons.sports_tennis_rounded, color: AppColors.primaryGreen),
+            ),
             const SizedBox(width: 10),
-
             Text(
-              "Solo Drills",
+              'Solo Drills Catalog',
               style: GoogleFonts.poppins(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -34,509 +47,220 @@ class DrillsScreen extends StatelessWidget {
           ],
         ),
       ),
-
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-
           children: [
-            //================ AI CARD =================
-            Container(
-              padding: const EdgeInsets.all(22),
+            // AI RECOMMENDED HERO
+            GradientHeroCard(
+              tag: '⭐ RECOMMENDED DRILL',
+              title: 'Smash Repetition Drill',
+              subtitle: '15 min • Explosive Jump Smash & Recovery',
+              buttonText: 'START SMASH DRILL NOW',
+              onPressed: () {
+                final drill = soloDrills.firstWhere(
+                  (d) => d.id == 'sd_smash',
+                  orElse: () => soloDrills.first,
+                );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => ActiveDrillSessionScreen(drill: drill)),
+                );
+              },
+            ),
 
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
+            const SizedBox(height: 32),
 
-                gradient: const LinearGradient(
-                  colors: [Color(0xff34d46a), Color(0xff1aa39d)],
-                ),
-              ),
+            // SOLO DRILLS LIST (Shadow, Smash, Wall, Serve, Net, Clear)
+            const SectionTitle(title: 'Solo Drills Catalog'),
+            const SizedBox(height: 14),
 
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-
-                children: [
-                  Text(
-                    "⭐ AI Recommended",
-
-                    style: GoogleFonts.poppins(color: Colors.white70),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Text(
-                    "Today's Drill",
-
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-
-                      fontSize: 28,
-
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  Text(
-                    "Shadow Footwork",
-
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-
-                      fontSize: 18,
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  Text(
-                    "20 Minutes • Intermediate",
-
-                    style: GoogleFonts.poppins(color: Colors.white70),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  SizedBox(
-                    width: double.infinity,
-
-                    height: 55,
-
-                    child: ElevatedButton(
-                      onPressed: () {},
-
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-
-                        foregroundColor: Colors.black,
-
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: soloDrills.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final drill = soloDrills[index];
+                return AppCard(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => ActiveDrillSessionScreen(drill: drill)),
+                    );
+                  },
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Container(
+                        height: 48,
+                        width: 48,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryGreen.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(drill.emoji, style: const TextStyle(fontSize: 24)),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  drill.title,
+                                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(width: 8),
+                                BadgeTag(label: drill.difficulty, color: AppColors.cyan),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              drill.description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 12),
+                            ),
+                          ],
                         ),
                       ),
-
-                      child: Text(
-                        "START NOW",
-
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(drill.duration, style: GoogleFonts.poppins(color: AppColors.primaryGreen, fontSize: 12, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 6),
+                          const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white60, size: 14),
+                        ],
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
 
-            const SizedBox(height: 35),
+            const SizedBox(height: 32),
 
-            //================ CATEGORIES =================
-            Text(
-              "Drill Categories",
-
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-
-                fontWeight: FontWeight.bold,
-
-                fontSize: 24,
-              ),
-            ),
-
-            const SizedBox(height: 18),
-
-            GridView.count(
-              crossAxisCount: 2,
-
-              shrinkWrap: true,
-
-              physics: const NeverScrollableScrollPhysics(),
-
-              mainAxisSpacing: 16,
-
-              crossAxisSpacing: 16,
-
-              childAspectRatio: 0.62,
-
-              children: [
-                categoryCard("👣", "Shadow Movement", "Movement & Recovery","14 Drills"),
-
-                categoryCard("🎯", "Serve Practice", "High • Low • Flick","18 Drills"),
-
-                categoryCard("🏸", "Stroke Practice", "Clear • Drop • Smash","15 Drills"),
-
-                categoryCard("🛡", "Attack & Defense", "Net • Lift • Defence","10 Drills"),
-
-                categoryCard("🧱", "Wall Training", "Reaction Practice","30 Drills"),
-
-                categoryCard("💪", "Fitness", "Agility & Strength","20 Drills"),
-              ],
-            ),
-
-            const SizedBox(height: 35),
-
-            //================ FAVORITES =================
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-              children: [
-                Text(
-                  "Favorite Drills",
-
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-
-                    fontSize: 24,
-
-                    fontWeight: FontWeight.bold,
-                  ),
+            // FAVORITE DRILLS
+            if (favorites.isNotEmpty) ...[
+              const SectionTitle(title: 'Favorite Drills'),
+              const SizedBox(height: 14),
+              SizedBox(
+                height: 140,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: favorites.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 14),
+                  itemBuilder: (context, index) {
+                    final drill = favorites[index];
+                    return SizedBox(
+                      width: 160,
+                      child: AppCard(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => ActiveDrillSessionScreen(drill: drill)),
+                          );
+                        },
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(drill.emoji, style: const TextStyle(fontSize: 26)),
+                            const Spacer(),
+                            Text(
+                              drill.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              drill.duration,
+                              style: GoogleFonts.poppins(
+                                color: AppColors.primaryGreen,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
-
-                TextButton(onPressed: () {}, child: const Text("See All")),
-              ],
-            ),
-
-            const SizedBox(height: 15),
-
-            SizedBox(
-              height: 170,
-
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-
-                children: [
-                  favoriteCard("🏸", "Smash Repetition"),
-
-                  favoriteCard("👣", "Six Corner"),
-
-                  favoriteCard("🧱", "Wall Drives"),
-                ],
               ),
-            ),
+              const SizedBox(height: 32),
+            ],
 
-            const SizedBox(height: 35),
-
-            //================ DAILY CHALLENGE =================
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1A2433),
-                borderRadius: BorderRadius.circular(22),
-              ),
+            // DAILY CHALLENGE CARD
+            AppCard(
+              backgroundColor: AppColors.surface,
+              borderColor: trainingProvider.dailyChallengeCompleted ? AppColors.primaryGreen : null,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(
-                        Icons.casino_rounded,
-                        color: Colors.orange,
-                        size: 28,
-                      ),
+                      const Icon(Icons.casino_rounded, color: AppColors.orange, size: 26),
                       const SizedBox(width: 10),
                       Text(
-                        "Daily Challenge",
+                        'Daily Challenge',
                         style: GoogleFonts.poppins(
                           color: Colors.white,
-                          fontSize: 22,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 18),
-
+                  const SizedBox(height: 14),
                   Text(
-                    "150 Shadow Footwork Steps",
+                    '150 Shadow Footwork Steps',
                     style: GoogleFonts.poppins(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-
-                  const SizedBox(height: 6),
-
+                  const SizedBox(height: 4),
                   Text(
-                    "Reward: +50 XP",
+                    trainingProvider.dailyChallengeCompleted ? 'Completed! +50 XP Earned' : 'Reward: +50 XP',
                     style: GoogleFonts.poppins(
-                      color: Colors.greenAccent,
-                      fontSize: 15,
+                      color: trainingProvider.dailyChallengeCompleted ? AppColors.electricGreen : AppColors.primaryGreen,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-
-                  const SizedBox(height: 20),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.greenAccent,
-                        foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: Text(
-                        "START CHALLENGE",
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                      ),
-                    ),
+                  const SizedBox(height: 18),
+                  AppButton(
+                    text: trainingProvider.dailyChallengeCompleted ? 'CHALLENGE COMPLETED' : 'START CHALLENGE',
+                    type: trainingProvider.dailyChallengeCompleted ? AppButtonType.outline : AppButtonType.primary,
+                    onPressed: trainingProvider.dailyChallengeCompleted
+                        ? null
+                        : () {
+                            trainingProvider.completeDailyChallenge();
+                            userProvider.addXp(50);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('🎉 Daily Challenge Completed! +50 XP awarded!')),
+                            );
+                          },
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 35),
-
-            //================ TRAINING STATS =================
-            Text(
-              "Training Stats",
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 24,
-              ),
-            ),
-
-            const SizedBox(height: 18),
-
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 1.35,
-              children: [
-                statCard(Icons.timer, "28 hrs", "Total Time"),
-
-                statCard(
-                  Icons.local_fire_department,
-                  "12 Days",
-                  "Current Streak",
-                ),
-
-                statCard(Icons.check_circle, "74", "Completed"),
-
-                statCard(Icons.favorite, "Smash", "Favorite Drill"),
-              ],
-            ),
-
-            const SizedBox(height: 30),
+            const SizedBox(height: 24),
           ],
         ),
-      ),
-    );
-  }
-
-//================ CATEGORY CARD =================
-
-Widget categoryCard(
-  String emoji,
-  String title,
-  String subtitle,
-  String drills,
-) {
-  return InkWell(
-    borderRadius: BorderRadius.circular(22),
-    onTap: () {},
-    child: Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A2433),
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: .20),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-
-          // Emoji
-          Container(
-            height: 58,
-            width: 58,
-            decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: .12),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                emoji,
-                style: const TextStyle(fontSize: 30),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-              fontSize: 18,
-            ),
-          ),
-
-          const SizedBox(height: 6),
-
-          Text(
-            subtitle,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.poppins(
-              color: Colors.white60,
-              fontSize: 12,
-            ),
-          ),
-
-          const Spacer(),
-
-          Row(
-            children: [
-
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: .15),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  drills,
-                  style: GoogleFonts.poppins(
-                    color: Colors.greenAccent,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-
-              const Spacer(),
-
-              Container(
-                height: 34,
-                width: 34,
-                decoration: BoxDecoration(
-                  color: Colors.greenAccent,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  color: Colors.black,
-                  size: 16,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-  //================ FAVORITE CARD =================
-
-  Widget favoriteCard(String emoji, String title) {
-    return Container(
-      width: 170,
-      margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A2433),
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 10,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: Colors.green.withValues(alpha: .18),
-            child: Text(emoji, style: const TextStyle(fontSize: 24)),
-          ),
-
-          const Spacer(),
-
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 5),
-
-          Text(
-            "Favorite Drill",
-            style: GoogleFonts.poppins(color: Colors.white60, fontSize: 13),
-          ),
-        ],
-      ),
-    );
-  }
-
-  //================ STATS CARD =================
-
-  Widget statCard(IconData icon, String value, String title) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A2433),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 10,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: Colors.greenAccent, size: 30),
-
-          const SizedBox(height: 10),
-
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 4),
-
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(color: Colors.white60, fontSize: 13),
-          ),
-        ],
       ),
     );
   }

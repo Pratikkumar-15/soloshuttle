@@ -1,216 +1,239 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:soloshuttle/screens/drills_screen.dart';
-import 'package:soloshuttle/screens/footwork_screen.dart';
+import 'package:provider/provider.dart';
+import '../core/theme/app_colors.dart';
+import '../providers/user_provider.dart';
+import '../presentation/widgets/app_card.dart';
+import '../presentation/widgets/gradient_hero_card.dart';
+import '../presentation/widgets/section_title.dart';
+import '../presentation/screens/voice_coach_screen.dart';
+import '../presentation/screens/reaction_training_screen.dart';
+import '../presentation/screens/tutorials_screen.dart';
+import '../presentation/screens/settings_screen.dart';
+import '../presentation/screens/notifications_screen.dart';
+import 'drills_screen.dart';
+import 'footwork_screen.dart';
+import 'training_session_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0B1220),
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider.user;
 
+    return Scaffold(
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ================= HEADER =================
+              // HEADER
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
                       Image.asset(
-                        "assets/images/logo.png",
+                        'assets/images/logo.png',
                         width: 42,
                         height: 42,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.sports_tennis_rounded, color: AppColors.primaryGreen, size: 36),
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        "SoloShuttle",
+                        'SoloShuttle',
                         style: GoogleFonts.poppins(
                           color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white10,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(
-                      Icons.notifications_none_rounded,
-                      color: Colors.white,
+                  InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                      );
+                    },
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white10,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Icon(
+                            Icons.notifications_none_rounded,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Positioned(
+                          right: 4,
+                          top: 4,
+                          child: Container(
+                            height: 9,
+                            width: 9,
+                            decoration: const BoxDecoration(
+                              color: AppColors.primaryGreen,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 35),
+              const SizedBox(height: 28),
 
               Text(
-                "Hello, Keshav 👋",
+                'Hello, ${user.name} 👋',
                 style: GoogleFonts.poppins(
                   color: Colors.white,
-                  fontSize: 30,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
-              const SizedBox(height: 8),
-
+              const SizedBox(height: 4),
               Text(
-                "Ready to train and improve today?",
+                'Ready to train and improve today?',
                 style: GoogleFonts.poppins(
-                  color: Colors.white70,
-                  fontSize: 17,
+                  color: AppColors.textSecondary,
+                  fontSize: 15,
                 ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 24),
 
-              // ================= TRAINING CARD =================
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF2ECC71),
-                      Color(0xFF16A085),
-                    ],
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Today's Training",
-                      style: GoogleFonts.poppins(
-                        color: Colors.white70,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "Ready to Smash?",
-                      style: GoogleFonts.poppins(
-                        color: Colors.white,
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 55,
-                      child: ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: Text(
-                          "START TRAINING",
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              // TODAY'S TRAINING CARD
+              GradientHeroCard(
+                tag: "TODAY'S TRAINING",
+                title: 'Ready to Smash?',
+                subtitle: 'Daily Footwork & Shadow Practice • 15 min',
+                buttonText: 'START TRAINING',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const TrainingSessionScreen()),
+                  );
+                },
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 28),
 
-              // ================= FEATURES =================
+              const SectionTitle(title: 'Training Modules'),
+              const SizedBox(height: 14),
+
+              // FEATURES GRID
               GridView.count(
                 crossAxisCount: 2,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.15,
+                crossAxisSpacing: 14,
+                mainAxisSpacing: 14,
+                childAspectRatio: 1.1,
                 children: [
-                  
                   FeatureCard(
-                    image: "assets/images/icons/solo_drills.png",
-                    title: "Solo Drills",
+                    image: 'assets/images/icons/solo_drills.png',
+                    iconFallback: Icons.sports_tennis_rounded,
+                    title: 'Solo Drills',
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const DrillsScreen(),
-                       ),
+                        MaterialPageRoute(builder: (_) => const DrillsScreen()),
                       );
                     },
                   ),
                   FeatureCard(
-                    image: "assets/images/icons/footwork.png",
-                    title: "Footwork",
+                    image: 'assets/images/icons/footwork.png',
+                    iconFallback: Icons.directions_run_rounded,
+                    title: 'Footwork',
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const FootworkScreen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const FootworkScreen()),
                       );
                     },
                   ),
                   FeatureCard(
-                    image: "assets/images/icons/voice_coach.png",
-                    title: "Voice Coach",
-                    onTap: () {},
+                    image: 'assets/images/icons/voice_coach.png',
+                    iconFallback: Icons.record_voice_over_rounded,
+                    title: 'Voice Coach',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const VoiceCoachScreen()),
+                      );
+                    },
                   ),
                   FeatureCard(
-                    image: "assets/images/icons/tutorials.png",
-                    title: "Tutorials",
-                    onTap: () {},
+                    image: 'assets/images/icons/tutorials.png',
+                    iconFallback: Icons.ondemand_video_rounded,
+                    title: 'Tutorials',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const TutorialsScreen()),
+                      );
+                    },
                   ),
                 ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // REACTION DRILL BANNER
+              AppCard(
+                backgroundColor: AppColors.surface,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ReactionTrainingScreen()),
+                  );
+                },
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.orange.withValues(alpha: 0.18),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.bolt_rounded, color: AppColors.orange, size: 28),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Reaction Speed Drill',
+                            style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Random directions & instant callouts',
+                            style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white60, size: 16),
+                  ],
+                ),
               ),
             ],
           ),
         ),
-      ),
-
-      // ================= BOTTOM NAVIGATION =================
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color(0xFF111827),
-        type: BottomNavigationBarType.fixed,
-        currentIndex: 0,
-        selectedItemColor: const Color(0xFF2ECC71),
-        unselectedItemColor: Colors.white60,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_rounded),
-            label: "Home",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.sports_tennis),
-            label: "Train",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart_rounded),
-            label: "Progress",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_rounded),
-            label: "Profile",
-          ),
-        ],
       ),
     );
   }
@@ -218,52 +241,43 @@ class HomeScreen extends StatelessWidget {
 
 class FeatureCard extends StatelessWidget {
   final String image;
+  final IconData iconFallback;
   final String title;
   final VoidCallback? onTap;
 
   const FeatureCard({
     super.key,
     required this.image,
+    required this.iconFallback,
     required this.title,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return AppCard(
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF1A2433),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 12,
-              offset: Offset(0, 6),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(
+            image,
+            width: 54,
+            height: 54,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => Icon(iconFallback, size: 44, color: AppColors.primaryGreen),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
             ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              image,
-              width: 80,
-              height: 80,
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(height: 18),
-            Text(
-              title,
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
