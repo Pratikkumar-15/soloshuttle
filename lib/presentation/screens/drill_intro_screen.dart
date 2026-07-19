@@ -7,6 +7,7 @@ import '../../providers/training_provider.dart';
 import '../widgets/app_button.dart';
 import '../widgets/badge_tag.dart';
 import '../widgets/section_title.dart';
+import '../widgets/warmup_overlay_screen.dart';
 import 'active_drill_session_screen.dart';
 
 /// Professional AI Sports Coaching Drill Overview Screen
@@ -1428,7 +1429,17 @@ class _DrillIntroScreenState extends State<DrillIntroScreen> {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => ActiveDrillSessionScreen(drill: drill),
+                      builder: (_) => WarmupOverlayScreen(
+                        allowSkip: true,
+                        onWarmupComplete: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ActiveDrillSessionScreen(drill: drill),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   );
                 },

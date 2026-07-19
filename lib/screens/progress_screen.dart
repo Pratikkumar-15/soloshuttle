@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:fl_chart/fl_chart.dart';
 import '../core/theme/app_colors.dart';
 import '../providers/user_provider.dart';
 import '../providers/training_provider.dart';
 import '../presentation/widgets/app_card.dart';
-import '../presentation/widgets/section_title.dart';
-import '../presentation/widgets/stat_card.dart';
+import '../presentation/widgets/badge_tag.dart';
+import '../presentation/widgets/hexagon_radar_chart.dart';
+import '../presentation/widgets/streak_heatmap_widget.dart';
+import '../presentation/screens/assessment_drills_screen.dart';
 
 class ProgressScreen extends StatelessWidget {
   const ProgressScreen({super.key});
@@ -16,26 +17,39 @@ class ProgressScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final trainingProvider = Provider.of<TrainingProvider>(context);
+
     final user = userProvider.user;
     final logs = trainingProvider.recentLogs;
+    final weeklyGoal = user.weeklyGoal;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: Text('Progress Analytics Hub', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Athlete Progress & Analytics',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Level & XP Progress Banner
-            AppCard(
-              backgroundColor: AppColors.surface,
+            // LEVEL & XP BANNER
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF132038), Color(0xFF1E3050)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.4), width: 1.5),
+              ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -43,38 +57,43 @@ class ProgressScreen extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          BadgeTag(label: 'CURRENT STAGE', color: AppColors.electricGreen),
+                          const SizedBox(height: 4),
                           Text(
-                            'Level ${user.level} Player',
+                            user.calculatedJourneyStage,
                             style: GoogleFonts.poppins(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            user.calculatedSkillLevel,
-                            style: GoogleFonts.poppins(color: AppColors.primaryGreen, fontSize: 13, fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.orange.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: AppColors.orange.withValues(alpha: 0.4)),
+                          color: AppColors.primaryGreen.withValues(alpha: 0.18),
+                          shape: BoxShape.circle,
                         ),
                         child: Text(
-                          '${user.currentXp} / ${user.xpNeededForNextLevel} XP',
-                          style: GoogleFonts.poppins(color: AppColors.orange, fontWeight: FontWeight.bold, fontSize: 13),
+                          'Lvl ${user.level}',
+                          style: GoogleFonts.poppins(color: AppColors.electricGreen, fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('XP Progress', style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 12)),
+                      Text('${user.currentXp} / ${user.xpNeededForNextLevel} XP', style: GoogleFonts.poppins(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                     child: LinearProgressIndicator(
                       value: (user.currentXp / user.xpNeededForNextLevel).clamp(0.0, 1.0),
-                      minHeight: 10,
+                      minHeight: 8,
                       backgroundColor: Colors.white12,
-                      valueColor: const AlwaysStoppedAnimation(AppColors.primaryGreen),
+                      color: AppColors.electricGreen,
                     ),
                   ),
                 ],
@@ -83,263 +102,204 @@ class ProgressScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // Performance Stat Metrics
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 14,
-              mainAxisSpacing: 14,
-              childAspectRatio: 1.3,
+            // 6-SKILL HEXAGON RADAR CHART (PRIORITY 2)
+            Center(
+              child: AppCard(
+                child: Column(
+                  children: [
+                    BadgeTag(label: '6-PILLAR ATHLETE SKILL RADAR', color: AppColors.electricGreen),
+                    const SizedBox(height: 16),
+                    HexagonRadarChart(skillRatings: user.skillRatings, size: 260),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // STRONGEST SKILL & FOCUS AREA CARDS
+            Row(
               children: [
-                StatCard(
-                  icon: Icons.local_fire_department_rounded,
-                  value: '${user.currentStreak} Days',
-                  title: 'Training Streak',
-                  accentColor: AppColors.orange,
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryGreen.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('STRONGEST SKILL', style: GoogleFonts.poppins(color: AppColors.electricGreen, fontSize: 10, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        Text(user.strongestSkill, style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
                 ),
-                StatCard(
-                  icon: Icons.timer_rounded,
-                  value: '${user.totalMinutes ~/ 60} hrs',
-                  title: 'Total Training',
-                  accentColor: AppColors.cyan,
-                ),
-                StatCard(
-                  icon: Icons.check_circle_rounded,
-                  value: '${user.completedSessions}',
-                  title: 'Completed Sessions',
-                  accentColor: AppColors.primaryGreen,
-                ),
-                StatCard(
-                  icon: Icons.favorite_rounded,
-                  value: user.favoriteDrill,
-                  title: 'Favorite Drill',
-                  accentColor: AppColors.purple,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.orange.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.orange.withValues(alpha: 0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('FOCUS AREA', style: GoogleFonts.poppins(color: AppColors.orange, fontSize: 10, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        Text(user.weakestSkill, style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 24),
 
-            // Weekly Minutes Bar Chart
-            const SectionTitle(title: 'Weekly Active Minutes'),
-            const SizedBox(height: 14),
-            AppCard(
-              child: SizedBox(
-                height: 170,
-                child: BarChart(
-                  BarChartData(
-                    alignment: BarChartAlignment.spaceAround,
-                    maxY: 60,
-                    barTouchData: BarTouchData(enabled: false),
-                    titlesData: FlTitlesData(
-                      show: true,
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (val, _) {
-                            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                            if (val.toInt() >= 0 && val.toInt() < days.length) {
-                              return Text(days[val.toInt()], style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 11));
-                            }
-                            return const Text('');
-                          },
-                        ),
-                      ),
-                      leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    ),
-                    borderData: FlBorderData(show: false),
-                    gridData: const FlGridData(show: false),
-                    barGroups: [
-                      _makeBarGroup(0, 30),
-                      _makeBarGroup(1, 45),
-                      _makeBarGroup(2, 20),
-                      _makeBarGroup(3, 50),
-                      _makeBarGroup(4, 35),
-                      _makeBarGroup(5, 40),
-                      _makeBarGroup(6, 25),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 28),
-
-            // Cumulative XP Trend Line Chart
-            const SectionTitle(title: 'XP Progression Trend'),
-            const SizedBox(height: 14),
-            AppCard(
-              child: SizedBox(
-                height: 160,
-                child: LineChart(
-                  LineChartData(
-                    gridData: const FlGridData(show: false),
-                    titlesData: const FlTitlesData(show: false),
-                    borderData: FlBorderData(show: false),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: const [
-                          FlSpot(0, 100),
-                          FlSpot(1, 180),
-                          FlSpot(2, 240),
-                          FlSpot(3, 310),
-                          FlSpot(4, 390),
-                          FlSpot(5, 450),
-                        ],
-                        isCurved: true,
-                        color: AppColors.electricGreen,
-                        barWidth: 3,
-                        isStrokeCapRound: true,
-                        dotData: const FlDotData(show: true),
-                        belowBarData: BarAreaData(
-                          show: true,
-                          color: AppColors.electricGreen.withValues(alpha: 0.15),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 28),
-
-            // Drill Category Training Distribution
-            const SectionTitle(title: 'Skill Focus Distribution'),
-            const SizedBox(height: 14),
+            // WEEKLY DISCIPLINE SUMMARY CARD (PRIORITY 3)
             AppCard(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildDistributionBar('Footwork & Shadow', 0.45, AppColors.primaryGreen),
-                  const SizedBox(height: 12),
-                  _buildDistributionBar('Reaction Drills', 0.25, AppColors.orange),
-                  const SizedBox(height: 12),
-                  _buildDistributionBar('Strokes & Wall Practice', 0.20, AppColors.cyan),
-                  const SizedBox(height: 12),
-                  _buildDistributionBar('Serves & Defense', 0.10, AppColors.purple),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      BadgeTag(label: 'WEEKLY GOAL SUMMARY', color: AppColors.cyan),
+                      Text('${weeklyGoal.completedDays}/${weeklyGoal.targetDays} Days', style: GoogleFonts.poppins(color: AppColors.cyan, fontSize: 12, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(weeklyGoal.title, style: GoogleFonts.poppins(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      value: weeklyGoal.dayProgress,
+                      minHeight: 8,
+                      backgroundColor: Colors.white12,
+                      color: AppColors.cyan,
+                    ),
+                  ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 24),
 
-            // Recent Session History Logs (Latest 5 sessions, newest first)
-            const SectionTitle(title: 'Recent Sessions'),
-            const SizedBox(height: 14),
-            Builder(
-              builder: (context) {
-                final displayLogs = (List.from(logs)
-                  ..sort((a, b) => b.date.compareTo(a.date)))
-                  .take(5)
-                  .toList();
+            // STREAK HEATMAP GRID
+            StreakHeatmapWidget(streakHistory: user.streakHistory),
 
-                if (displayLogs.isEmpty) {
-                  return Text('No training sessions logged yet.', style: GoogleFonts.poppins(color: AppColors.textMuted));
-                }
+            const SizedBox(height: 24),
 
-                return ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: displayLogs.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final log = displayLogs[index];
-                    return AppCard(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primaryGreen.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(Icons.sports_tennis_rounded, color: AppColors.primaryGreen, size: 22),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        log.title,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold),
-                                      ),
-                                      Text(
-                                        '${log.duration} • ${log.category}',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '+${log.xpEarned} XP',
-                            style: GoogleFonts.poppins(color: AppColors.electricGreen, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
+            // PERSONAL RECORDS SECTION
+            Text('Personal Records', style: GoogleFonts.poppins(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: AppCard(
+                    child: Column(
+                      children: [
+                        const Icon(Icons.bolt_rounded, color: AppColors.orange, size: 28),
+                        const SizedBox(height: 6),
+                        Text('${user.currentStreak} Days', style: GoogleFonts.poppins(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                        Text('BEST STREAK', style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 10)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AppCard(
+                    child: Column(
+                      children: [
+                        const Icon(Icons.fitness_center_rounded, color: AppColors.primaryGreen, size: 28),
+                        const SizedBox(height: 6),
+                        Text('${user.completedSessions}', style: GoogleFonts.poppins(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                        Text('SESSIONS DONE', style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 10)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
+
+            const SizedBox(height: 24),
+
+            // ASSESSMENTS SHORTCUT
+            AppCard(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const AssessmentDrillsScreen()));
+              },
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: AppColors.purple.withValues(alpha: 0.18), shape: BoxShape.circle),
+                    child: const Icon(Icons.assignment_rounded, color: AppColors.purple, size: 26),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Periodic Skill Assessments', style: GoogleFonts.poppins(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                        Text('Test 6-corner speed, reaction time & drive accuracy', style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 11.5)),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 16),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // RECENT TRAINING LOGS
+            Text('Recent Training History', style: GoogleFonts.poppins(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+
+            if (logs.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(16)),
+                child: Center(
+                  child: Text('No completed training logs yet. Start a session from the Home screen!', style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 12)),
+                ),
+              )
+            else
+              ...logs.reversed.take(5).map((log) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: AppCard(
+                    child: Row(
+                      children: [
+                        const Icon(Icons.check_circle_rounded, color: AppColors.electricGreen, size: 24),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(log.title, style: GoogleFonts.poppins(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                              Text('${log.duration} • ${log.category}', style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 11)),
+                            ],
+                          ),
+                        ),
+                        Text('+${log.xpEarned} XP', style: GoogleFonts.poppins(color: AppColors.electricGreen, fontSize: 14, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                );
+              }),
           ],
         ),
       ),
-    );
-  }
-
-  BarChartGroupData _makeBarGroup(int x, double y) {
-    return BarChartGroupData(
-      x: x,
-      barRods: [
-        BarChartRodData(
-          toY: y,
-          color: AppColors.primaryGreen,
-          width: 16,
-          borderRadius: BorderRadius.circular(6),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDistributionBar(String label, double ratio, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: GoogleFonts.poppins(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
-            Text('${(ratio * 100).toInt()}%', style: GoogleFonts.poppins(color: color, fontWeight: FontWeight.bold, fontSize: 13)),
-          ],
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: LinearProgressIndicator(
-            value: ratio,
-            minHeight: 8,
-            backgroundColor: Colors.white12,
-            valueColor: AlwaysStoppedAnimation<Color>(color),
-          ),
-        ),
-      ],
     );
   }
 }

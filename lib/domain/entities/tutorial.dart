@@ -1,42 +1,58 @@
+class TutorialSection {
+  final String title;
+  final String content;
+
+  const TutorialSection({required this.title, required this.content});
+}
+
 class Tutorial {
   final String id;
   final String title;
-  final String description;
-  final String category; // 'Front Court', 'Mid Court', 'Rear Court'
-  final String level; // 'Beginner', 'Intermediate', 'Advanced'
+  final String category;
   final String duration;
-  final String thumbnailUrl;
+  final String level; // Beginner, Intermediate, Advanced, Elite
+  final String videoUrl;
+  final String thumbnail;
+  final String summary;
+  
+  // 14 Required Manual Breakdown Sections
+  final String introduction;
+  final String objective;
+  final String matchApplications;
   final String grip;
-  final List<String> technique;
-  final String contactPoint;
+  final String readyPosition;
+  final String footwork;
   final String bodyPosition;
+  final String swingMechanics;
+  final String contactPoint;
+  final String recovery;
   final List<String> commonMistakes;
-  final String coachTip;
-  final List<String> matchSituations;
-  final List<String> learningObjectives;
-  final List<String> practiceSuggestions;
-  final String youtubeUrl;
-  final String youtubeTitle;
+  final List<String> coachingTips;
+  final List<String> practiceProgression;
+  final String progressCheck;
 
   const Tutorial({
     required this.id,
     required this.title,
-    required this.description,
     required this.category,
-    required this.level,
     required this.duration,
-    required this.thumbnailUrl,
+    required this.level,
+    required this.videoUrl,
+    required this.thumbnail,
+    required this.summary,
+    required this.introduction,
+    required this.objective,
+    required this.matchApplications,
     required this.grip,
-    required this.technique,
-    required this.contactPoint,
+    required this.readyPosition,
+    required this.footwork,
     required this.bodyPosition,
+    required this.swingMechanics,
+    required this.contactPoint,
+    required this.recovery,
     required this.commonMistakes,
-    required this.coachTip,
-    this.matchSituations = const [],
-    this.learningObjectives = const [],
-    this.practiceSuggestions = const [],
-    this.youtubeUrl = '',
-    this.youtubeTitle = '',
+    required this.coachingTips,
+    required this.practiceProgression,
+    required this.progressCheck,
   });
 }
-

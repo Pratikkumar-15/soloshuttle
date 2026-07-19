@@ -1012,29 +1012,23 @@ class TrainingProvider extends ChangeNotifier {
         final List<dynamic> jsonList = jsonDecode(logsString);
         _recentLogs = jsonList.map((j) => TrainingLog.fromJson(j)).toList();
       } else {
-        _recentLogs = [
-          TrainingLog(
-            id: 'log1',
-            title: 'Six Corner Footwork',
-            duration: '20 min',
-            xpEarned: 120,
-            date: DateTime.now().subtract(const Duration(hours: 4)),
-            category: 'Footwork',
-          ),
-          TrainingLog(
-            id: 'log2',
-            title: 'Smash Repetition Drill',
-            duration: '15 min',
-            xpEarned: 100,
-            date: DateTime.now().subtract(const Duration(days: 1)),
-            category: 'Solo Drills',
-          ),
-        ];
+        _recentLogs = [];
       }
     } catch (e) {
       debugPrint('Failed to load training logs: $e');
     } finally {
       notifyListeners();
+    }
+  }
+
+  Future<void> clearLogs() async {
+    _recentLogs = [];
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('training_logs');
+    } catch (e) {
+      debugPrint('Failed to clear logs: $e');
     }
   }
 

@@ -13,7 +13,7 @@ import '../widgets/timer_ring_widget.dart';
 import '../widgets/drill_info_card.dart';
 import '../widgets/voice_instruction_card.dart';
 import '../widgets/pause_screen_overlay.dart';
-import '../widgets/completion_celebration_widget.dart';
+import '../widgets/session_review_screen.dart';
 import '../widgets/training_bottom_nav.dart';
 
 class PremiumTrainingSessionScreen extends StatefulWidget {
@@ -352,21 +352,13 @@ class _PremiumTrainingSessionScreenState extends State<PremiumTrainingSessionScr
     if (_isCompleted) {
       final xp = widget.drill?.xpReward ?? 90;
       final mins = (_workSecondsTrained / 60).ceil().clamp(1, 60);
-      final cals = (mins * 8.5).round();
 
-      return CompletionCelebrationWidget(
-        roundsCompleted: _workPhaseCount,
-        totalTimeFormatted: '${(_elapsedTotalSeconds ~/ 60)}:${(_elapsedTotalSeconds % 60).toString().padLeft(2, '0')}',
-        estimatedCalories: cals,
+      return SessionReviewScreen(
+        drillTitle: _trainingTitle,
+        category: widget.drill?.categoryName ?? 'Footwork',
         xpEarned: xp,
-        consistencyStreak: 3,
-        onTrainAgain: _restartSession,
-        onShareProgress: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('🎉 Workout summary ready to share!')),
-          );
-        },
-        onBackHome: () => Navigator.pop(context),
+        durationMinutes: mins,
+        onFinish: () => Navigator.pop(context),
       );
     }
 

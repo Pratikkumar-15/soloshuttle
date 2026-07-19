@@ -4,59 +4,33 @@ import 'package:provider/provider.dart';
 import '../core/theme/app_colors.dart';
 import '../providers/user_provider.dart';
 import '../presentation/widgets/app_card.dart';
-import '../presentation/widgets/app_button.dart';
 import '../presentation/widgets/section_title.dart';
 import '../presentation/widgets/badge_tag.dart';
 import '../presentation/screens/settings_screen.dart';
+import '../presentation/screens/onboarding_screen.dart';
+import '../presentation/screens/assessment_drills_screen.dart';
+import '../presentation/screens/mental_corner_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
-  static const List<Map<String, String>> achievements = [
-    {
-      'emoji': '🔥',
-      'title': '12-Day Streak',
-      'description': 'Trained 12 consecutive days without missing a session.',
-      'status': 'UNLOCKED',
-    },
-    {
-      'emoji': '⚡',
-      'title': 'Speed Demon',
-      'description': 'Completed 50 reaction speed callouts under 1.5 seconds.',
-      'status': 'UNLOCKED',
-    },
-    {
-      'emoji': '🏆',
-      'title': 'Smash Master',
-      'description': 'Logged over 100 smash repetitions in solo drills.',
-      'status': 'UNLOCKED',
-    },
-    {
-      'emoji': '🎯',
-      'title': 'Bullseye',
-      'description': 'Achieved 90%+ low serve target accuracy.',
-      'status': 'UNLOCKED',
-    },
-    {
-      'emoji': '👑',
-      'title': '1000 XP Club',
-      'description': 'Earned 1000 total training XP points.',
-      'status': 'IN PROGRESS',
-    },
-    {
-      'emoji': '👟',
-      'title': 'Footwork Legend',
-      'description': 'Completed 50 six-corner shadow footwork routines.',
-      'status': 'IN PROGRESS',
-    },
+  static const List<String> journeyStages = [
+    'Explorer',
+    'Beginner',
+    'Developing Player',
+    'Intermediate',
+    'Advanced',
+    'Competitive Player',
+    'Elite Athlete',
   ];
 
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final user = userProvider.user;
-    final xpProgressRatio = (user.currentXp / user.xpNeededForNextLevel).clamp(0.0, 1.0);
-    final xpNeededRemaining = user.xpNeededForNextLevel - user.currentXp;
+
+    final currentStage = user.calculatedJourneyStage;
+    final currentStageIndex = journeyStages.indexOf(currentStage).clamp(0, 6);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -95,8 +69,8 @@ class ProfileScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(color: AppColors.primaryGreen, width: 3),
-                      image: const DecorationImage(
-                        image: AssetImage('assets/images/logo.png'),
+                      image: DecorationImage(
+                        image: AssetImage(user.avatarUrl),
                         fit: BoxFit.cover,
                       ),
                       boxShadow: [
@@ -119,16 +93,21 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  BadgeTag(label: 'Level ${user.level} • ${user.calculatedSkillLevel}', color: AppColors.primaryGreen),
+                  const SizedBox(height: 2),
+                  Text(
+                    '@${user.username}',
+                    style: GoogleFonts.poppins(color: AppColors.primaryGreen, fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  BadgeTag(label: 'Level ${user.level} • $currentStage', color: AppColors.primaryGreen),
                 ],
               ),
             ),
 
             const SizedBox(height: 28),
 
-            // Level & Progress Bar Card
-            const SectionTitle(title: 'Level & XP Progress'),
+            // 7-STAGE PLAYER JOURNEY CARD
+            const SectionTitle(title: '7-Stage Athlete Journey'),
             const SizedBox(height: 12),
             AppCard(
               child: Column(
@@ -137,39 +116,31 @@ class ProfileScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Level ${user.level} (${user.calculatedSkillLevel})',
-                        style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        '${user.currentXp} / ${user.xpNeededForNextLevel} XP',
-                        style: GoogleFonts.poppins(color: AppColors.orange, fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
+                      Text('Stage ${currentStageIndex + 1} of 7', style: GoogleFonts.poppins(color: AppColors.electricGreen, fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text(currentStage, style: GoogleFonts.poppins(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: LinearProgressIndicator(
-                      value: xpProgressRatio,
-                      minHeight: 10,
-                      backgroundColor: Colors.white12,
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
+                  // Journey Stage Progress Stepper
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Next Level Progress:',
-                        style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 12),
-                      ),
-                      Text(
-                        '$xpNeededRemaining XP to Level ${user.level + 1}',
-                        style: GoogleFonts.poppins(color: AppColors.electricGreen, fontSize: 12, fontWeight: FontWeight.w600),
-                      ),
-                    ],
+                    children: List.generate(7, (index) {
+                      final isReached = index <= currentStageIndex;
+                      return Expanded(
+                        child: Container(
+                          height: 8,
+                          margin: const EdgeInsets.symmetric(horizontal: 2),
+                          decoration: BoxDecoration(
+                            color: isReached ? AppColors.electricGreen : Colors.white12,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Sessions completed: ${user.completedSessions} • Total minutes: ${user.totalMinutes}m',
+                    style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 11.5),
                   ),
                 ],
               ),
@@ -177,114 +148,127 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // Profile Details & Auto Skill Level Card
-            const SectionTitle(title: 'Player Attributes'),
+            // AI COACH DIAGNOSTICS & BADGES
+            const SectionTitle(title: 'Coach Diagnostics'),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: AppCard(
+                    borderColor: AppColors.primaryGreen.withValues(alpha: 0.4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('TOP STRENGTH', style: GoogleFonts.poppins(color: AppColors.electricGreen, fontSize: 10, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        Text(user.strongestSkill, style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AppCard(
+                    borderColor: AppColors.orange.withValues(alpha: 0.4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('AREA TO IMPROVE', style: GoogleFonts.poppins(color: AppColors.orange, fontSize: 10, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        Text(user.weakestSkill, style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // ATHLETE BIOMETRICS & PREFERENCES
+            const SectionTitle(title: 'Athlete Profile Details'),
             const SizedBox(height: 12),
             AppCard(
               child: Column(
                 children: [
-                  _buildDetailRow('Automated Skill Rank', user.calculatedSkillLevel, isHighlighted: true),
-                  const Divider(color: Colors.white12),
-                  _buildDetailRow('Dominant Hand', user.dominantHand),
-                  const Divider(color: Colors.white12),
-                  _buildDetailRow('Current Level', 'Level ${user.level}'),
-                  const Divider(color: Colors.white12),
-                  _buildDetailRow('Favorite Drill', user.favoriteDrill),
-                  const Divider(color: Colors.white12),
-                  _buildDetailRow('Completed Sessions', '${user.completedSessions} Sessions'),
-                  const Divider(color: Colors.white12),
-                  _buildDetailRow('Total Training Time', '${user.totalMinutes ~/ 60} hrs'),
+                  _buildProfileRow('Playing Level', user.playingLevel),
+                  _buildProfileRow('Primary Goal', user.primaryGoal),
+                  _buildProfileRow('Dominant Hand', user.dominantHand),
+                  _buildProfileRow('Playing Style', user.playingStyle ?? 'Both'),
+                  _buildProfileRow('Age', user.age != null ? '${user.age} yrs' : 'Not set'),
+                  _buildProfileRow('Gender', user.gender ?? 'Not set'),
                 ],
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 24),
 
-            // Auto Calculation Explanation Banner
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.cyan.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.cyan.withValues(alpha: 0.3)),
-              ),
+            // SHORTCUT BUTTONS
+            AppCard(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const MentalCornerScreen()));
+              },
               child: Row(
                 children: [
-                  const Icon(Icons.auto_awesome_rounded, color: AppColors.cyan, size: 20),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Skill Rank is calculated automatically from XP, sessions, training minutes, and streaks.',
-                      style: GoogleFonts.poppins(color: AppColors.cyan, fontSize: 11, fontWeight: FontWeight.w500),
-                    ),
-                  ),
+                  const Icon(Icons.self_improvement_rounded, color: AppColors.cyan, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text('Mental Corner & Psychology', style: GoogleFonts.poppins(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold))),
+                  const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 16),
                 ],
               ),
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 12),
 
-            // Achievements Card & Grid
-            SectionTitle(
-              title: 'Achievements & Badges',
-              actionText: 'View All',
-              onActionPressed: () => _showAchievementsModal(context),
+            AppCard(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const AssessmentDrillsScreen()));
+              },
+              child: Row(
+                children: [
+                  const Icon(Icons.assignment_rounded, color: AppColors.purple, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text('Periodic Skill Assessments', style: GoogleFonts.poppins(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold))),
+                  const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 16),
+                ],
+              ),
             ),
-            const SizedBox(height: 14),
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.25,
-              children: achievements.take(4).map((ach) {
-                final isUnlocked = ach['status'] == 'UNLOCKED';
-                return AppCard(
-                  onTap: () => _showAchievementsModal(context),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                  backgroundColor: isUnlocked ? AppColors.surface : AppColors.surfaceLight.withValues(alpha: 0.4),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(ach['emoji']!, style: const TextStyle(fontSize: 26)),
-                      const SizedBox(height: 4),
-                      Flexible(
-                        child: Text(
-                          ach['title']!,
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.poppins(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        ach['status']!,
-                        style: GoogleFonts.poppins(
-                          color: isUnlocked ? AppColors.electricGreen : AppColors.textMuted,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+
+            const SizedBox(height: 24),
+
+            // RE-ONBOARDING RESET FOR TESTING
+            OutlinedButton(
+              onPressed: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: AppColors.surface,
+                    title: Text('Reset Onboarding?', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+                    content: Text('This will reset your athlete setup and restart the onboarding flow.', style: GoogleFonts.poppins(color: AppColors.textSecondary)),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('CANCEL')),
+                      TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('RESET', style: TextStyle(color: AppColors.red))),
                     ],
                   ),
                 );
-              }).toList(),
-            ),
-
-            const SizedBox(height: 28),
-
-            AppButton(
-              text: 'SETTINGS & PREFERENCES',
-              type: AppButtonType.outline,
-              icon: Icons.tune_rounded,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                );
+                if (confirm == true) {
+                  await userProvider.resetOnboarding();
+                  if (context.mounted) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+                      (route) => false,
+                    );
+                  }
+                }
               },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.red,
+                side: const BorderSide(color: AppColors.red),
+                minimumSize: const Size.fromHeight(48),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+              child: Text('RE-ENTER ONBOARDING SETUP', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -292,164 +276,90 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String title, String value, {bool isHighlighted = false}) {
+  Widget _buildProfileRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 14)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.poppins(
-                color: isHighlighted ? AppColors.primaryGreen : Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+          Text(label, style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 13)),
+          Text(value, style: GoogleFonts.poppins(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
 
-  void _showEditProfileModal(BuildContext context, UserProvider userProvider) {
-    final nameController = TextEditingController(text: userProvider.user.name);
-    String selectedHand = userProvider.user.dominantHand;
+  void _showEditProfileModal(BuildContext context, UserProvider provider) {
+    final nameController = TextEditingController(text: provider.user.name);
+    String selectedHand = provider.user.dominantHand;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 24,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Edit Player Details', style: GoogleFonts.poppins(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: nameController,
-                    style: GoogleFonts.poppins(color: Colors.white),
-                    decoration: InputDecoration(
-                      labelText: 'Player Name',
-                      labelStyle: GoogleFonts.poppins(color: AppColors.textMuted),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white24)),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primaryGreen)),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Text('Dominant Racket Hand', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: ['Right', 'Left'].map((hand) {
-                      final isSelected = selectedHand == hand;
-                      return Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: ChoiceChip(
-                            selected: isSelected,
-                            label: Text(hand, style: TextStyle(fontSize: 13, color: isSelected ? Colors.black : Colors.white)),
-                            selectedColor: AppColors.primaryGreen,
-                            backgroundColor: AppColors.surfaceLight,
-                            onSelected: (_) => setModalState(() => selectedHand = hand),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 24),
-                  AppButton(
-                    text: 'SAVE PROFILE',
-                    onPressed: () {
-                      if (nameController.text.trim().isNotEmpty) {
-                        userProvider.updateProfileName(nameController.text.trim());
-                      }
-                      userProvider.updateDominantHand(selectedHand);
-                      Navigator.pop(context);
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _showAchievementsModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.75,
-          builder: (context, scrollController) {
-            return ListView(
-              controller: scrollController,
-              padding: const EdgeInsets.all(24),
-              children: [
-                Center(
-                  child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Edit Athlete Profile', style: GoogleFonts.poppins(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: nameController,
+                style: GoogleFonts.poppins(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Full Name',
+                  labelStyle: GoogleFonts.poppins(color: AppColors.textMuted),
+                  enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white24), borderRadius: BorderRadius.circular(12)),
+                  focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: AppColors.primaryGreen), borderRadius: BorderRadius.circular(12)),
                 ),
-                const SizedBox(height: 16),
-                Text('Achievements & Badges', style: GoogleFonts.poppins(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 16),
-                ...achievements.map((ach) {
-                  final isUnlocked = ach['status'] == 'UNLOCKED';
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: AppCard(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          Text(ach['emoji']!, style: const TextStyle(fontSize: 32)),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(ach['title']!, style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                                const SizedBox(height: 2),
-                                Text(ach['description']!, style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 12)),
-                              ],
-                            ),
-                          ),
-                          BadgeTag(
-                            label: ach['status']!,
-                            color: isUnlocked ? AppColors.primaryGreen : Colors.grey,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
-              ],
-            );
-          },
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                initialValue: selectedHand,
+                dropdownColor: AppColors.surface,
+                style: GoogleFonts.poppins(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Dominant Racket Hand',
+                  labelStyle: GoogleFonts.poppins(color: AppColors.textMuted),
+                  enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white24), borderRadius: BorderRadius.circular(12)),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'Right-handed', child: Text('Right-handed')),
+                  DropdownMenuItem(value: 'Left-handed', child: Text('Left-handed')),
+                  DropdownMenuItem(value: 'Ambidextrous', child: Text('Ambidextrous')),
+                ],
+                onChanged: (val) {
+                  if (val != null) selectedHand = val;
+                },
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  if (nameController.text.trim().isNotEmpty) {
+                    provider.updateProfileName(nameController.text.trim());
+                  }
+                  provider.updateDominantHand(selectedHand);
+                  Navigator.pop(ctx);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryGreen,
+                  foregroundColor: Colors.black,
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text('SAVE CHANGES', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
         );
       },
     );
