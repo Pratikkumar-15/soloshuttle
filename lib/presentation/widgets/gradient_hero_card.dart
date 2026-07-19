@@ -47,13 +47,17 @@ class GradientHeroCard extends StatelessWidget {
                 Icon(icon, color: Colors.white70, size: 18),
                 const SizedBox(width: 6),
               ],
-              Text(
-                tag,
-                style: GoogleFonts.poppins(
-                  color: Colors.white70,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.8,
+              Expanded(
+                child: Text(
+                  tag,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.poppins(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.8,
+                  ),
                 ),
               ),
             ],
@@ -63,7 +67,7 @@ class GradientHeroCard extends StatelessWidget {
             title,
             style: GoogleFonts.poppins(
               color: Colors.white,
-              fontSize: 26,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -89,12 +93,15 @@ class GradientHeroCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: Text(
-                buttonText,
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  letterSpacing: 0.5,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  buttonText,
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
             ),

@@ -226,53 +226,78 @@ class ProgressScreen extends StatelessWidget {
 
             const SizedBox(height: 28),
 
-            // Recent Session History Logs
+            // Recent Session History Logs (Latest 5 sessions, newest first)
             const SectionTitle(title: 'Recent Sessions'),
             const SizedBox(height: 14),
-            if (logs.isEmpty)
-              Text('No training sessions logged yet.', style: GoogleFonts.poppins(color: AppColors.textMuted))
-            else
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: logs.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (context, index) {
-                  final log = logs[index];
-                  return AppCard(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryGreen.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(Icons.sports_tennis_rounded, color: AppColors.primaryGreen, size: 22),
-                            ),
-                            const SizedBox(width: 14),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+            Builder(
+              builder: (context) {
+                final displayLogs = (List.from(logs)
+                  ..sort((a, b) => b.date.compareTo(a.date)))
+                  .take(5)
+                  .toList();
+
+                if (displayLogs.isEmpty) {
+                  return Text('No training sessions logged yet.', style: GoogleFonts.poppins(color: AppColors.textMuted));
+                }
+
+                return ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: displayLogs.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final log = displayLogs[index];
+                    return AppCard(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Row(
                               children: [
-                                Text(log.title, style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
-                                Text('${log.duration} • ${log.category}', style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 12)),
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryGreen.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(Icons.sports_tennis_rounded, color: AppColors.primaryGreen, size: 22),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        log.title,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold),
+                                      ),
+                                      Text(
+                                        '${log.duration} • ${log.category}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
-                          ],
-                        ),
-                        Text(
-                          '+${log.xpEarned} XP',
-                          style: GoogleFonts.poppins(color: AppColors.electricGreen, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '+${log.xpEarned} XP',
+                            style: GoogleFonts.poppins(color: AppColors.electricGreen, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           ],
         ),
       ),

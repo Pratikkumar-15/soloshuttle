@@ -3,15 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../core/theme/app_colors.dart';
 import '../providers/training_provider.dart';
-import '../providers/user_provider.dart';
-import '../domain/entities/drill.dart';
 import '../presentation/widgets/app_card.dart';
-import '../presentation/widgets/app_button.dart';
 import '../presentation/widgets/badge_tag.dart';
 import '../presentation/widgets/section_title.dart';
-import '../presentation/widgets/stat_card.dart';
 import '../presentation/widgets/gradient_hero_card.dart';
-import '../presentation/screens/active_drill_session_screen.dart';
+import '../presentation/screens/drill_intro_screen.dart';
 
 class DrillsScreen extends StatelessWidget {
   const DrillsScreen({super.key});
@@ -19,10 +15,8 @@ class DrillsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final trainingProvider = Provider.of<TrainingProvider>(context);
-    final userProvider = Provider.of<UserProvider>(context);
     final soloDrills = trainingProvider.soloDrills;
     final favorites = trainingProvider.favoriteDrills;
-    final user = userProvider.user;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -65,14 +59,14 @@ class DrillsScreen extends StatelessWidget {
                 );
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => ActiveDrillSessionScreen(drill: drill)),
+                  MaterialPageRoute(builder: (_) => DrillIntroScreen(drill: drill)),
                 );
               },
             ),
 
             const SizedBox(height: 32),
 
-            // SOLO DRILLS LIST (Shadow, Smash, Wall, Serve, Net, Clear)
+            // SOLO DRILLS LIST
             const SectionTitle(title: 'Solo Drills Catalog'),
             const SizedBox(height: 14),
 
@@ -87,7 +81,7 @@ class DrillsScreen extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => ActiveDrillSessionScreen(drill: drill)),
+                      MaterialPageRoute(builder: (_) => DrillIntroScreen(drill: drill)),
                     );
                   },
                   padding: const EdgeInsets.all(16),
@@ -145,9 +139,9 @@ class DrillsScreen extends StatelessWidget {
 
             const SizedBox(height: 32),
 
-            // FAVORITE DRILLS
+            // FAVORITE DRILLS (Task 10: Auto-ranked top 3)
             if (favorites.isNotEmpty) ...[
-              const SectionTitle(title: 'Favorite Drills'),
+              const SectionTitle(title: 'Top Favourite Drills'),
               const SizedBox(height: 14),
               SizedBox(
                 height: 140,
@@ -163,7 +157,7 @@ class DrillsScreen extends StatelessWidget {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => ActiveDrillSessionScreen(drill: drill)),
+                            MaterialPageRoute(builder: (_) => DrillIntroScreen(drill: drill)),
                           );
                         },
                         padding: const EdgeInsets.all(16),
@@ -198,67 +192,8 @@ class DrillsScreen extends StatelessWidget {
                   },
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
             ],
-
-            // DAILY CHALLENGE CARD
-            AppCard(
-              backgroundColor: AppColors.surface,
-              borderColor: trainingProvider.dailyChallengeCompleted ? AppColors.primaryGreen : null,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.casino_rounded, color: AppColors.orange, size: 26),
-                      const SizedBox(width: 10),
-                      Text(
-                        'Daily Challenge',
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    '150 Shadow Footwork Steps',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    trainingProvider.dailyChallengeCompleted ? 'Completed! +50 XP Earned' : 'Reward: +50 XP',
-                    style: GoogleFonts.poppins(
-                      color: trainingProvider.dailyChallengeCompleted ? AppColors.electricGreen : AppColors.primaryGreen,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  AppButton(
-                    text: trainingProvider.dailyChallengeCompleted ? 'CHALLENGE COMPLETED' : 'START CHALLENGE',
-                    type: trainingProvider.dailyChallengeCompleted ? AppButtonType.outline : AppButtonType.primary,
-                    onPressed: trainingProvider.dailyChallengeCompleted
-                        ? null
-                        : () {
-                            trainingProvider.completeDailyChallenge();
-                            userProvider.addXp(50);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('🎉 Daily Challenge Completed! +50 XP awarded!')),
-                            );
-                          },
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
           ],
         ),
       ),

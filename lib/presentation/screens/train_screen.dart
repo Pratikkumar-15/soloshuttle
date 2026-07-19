@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../providers/training_provider.dart';
 import '../widgets/app_card.dart';
 import '../widgets/badge_tag.dart';
 import '../widgets/gradient_hero_card.dart';
 import '../../screens/footwork_screen.dart';
 import '../../screens/drills_screen.dart';
-import '../../screens/training_session_screen.dart';
+import 'drill_intro_screen.dart';
 import 'reaction_training_screen.dart';
-import 'voice_coach_screen.dart';
 import 'tutorials_screen.dart';
 
 class TrainScreen extends StatelessWidget {
@@ -16,6 +17,10 @@ class TrainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final trainingProvider = Provider.of<TrainingProvider>(context);
+    final todaysPlan = trainingProvider.todaysTrainingPlan;
+    final todaysDrill = trainingProvider.todaysDrill;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -33,14 +38,14 @@ class TrainScreen extends StatelessWidget {
           children: [
             // Daily Focus Training Hero
             GradientHeroCard(
-              tag: 'FEATURED SESSION',
-              title: 'Daily Training Routine',
-              subtitle: 'Footwork • Shadow Drills • 15 min',
-              buttonText: 'START ROUTINE NOW',
+              tag: '${todaysPlan.dayName.toUpperCase()} • ${todaysPlan.pillar.toUpperCase()}',
+              title: todaysPlan.title,
+              subtitle: todaysPlan.subtitle,
+              buttonText: 'START TODAY\'S DRILL',
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const TrainingSessionScreen()),
+                  MaterialPageRoute(builder: (_) => DrillIntroScreen(drill: todaysDrill)),
                 );
               },
             ),
@@ -101,37 +106,19 @@ class TrainScreen extends StatelessWidget {
 
             const SizedBox(height: 14),
 
-            // 3. REACTION TRAINING
+            // 3. REACTION TRAINING MODULE
             _buildCategoryCard(
               context,
-              title: 'Reaction Training',
-              subtitle: 'Random direction callouts, court map visualizer & speed modes',
+              title: 'Reaction Training Module',
+              subtitle: 'Voice-guided callouts, 3-round system & random direction, color & number modes',
               badge: 'Interactive',
               badgeColor: AppColors.orange,
               icon: Icons.bolt_rounded,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ReactionTrainingScreen()),
-                );
-              },
-            ),
-
-            const SizedBox(height: 14),
-
-            // 4. VOICE COACH
-            _buildCategoryCard(
-              context,
-              title: 'Voice Coach',
-              subtitle: 'Hands-free AI voice guided footwork & custom pace interval',
-              badge: 'Audio AI',
-              badgeColor: AppColors.purple,
-              icon: Icons.record_voice_over_rounded,
               imageAsset: 'assets/images/icons/voice_coach.png',
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const VoiceCoachScreen()),
+                  MaterialPageRoute(builder: (_) => const ReactionTrainingScreen()),
                 );
               },
             ),

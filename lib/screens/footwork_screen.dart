@@ -3,11 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../core/theme/app_colors.dart';
 import '../providers/training_provider.dart';
-import '../domain/entities/drill.dart';
 import '../presentation/widgets/app_card.dart';
 import '../presentation/widgets/badge_tag.dart';
 import '../presentation/widgets/gradient_hero_card.dart';
-import '../presentation/screens/active_drill_session_screen.dart';
+import '../presentation/screens/drill_intro_screen.dart';
 
 class FootworkScreen extends StatelessWidget {
   const FootworkScreen({super.key});
@@ -67,7 +66,7 @@ class FootworkScreen extends StatelessWidget {
                 );
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => ActiveDrillSessionScreen(drill: drill)),
+                  MaterialPageRoute(builder: (_) => DrillIntroScreen(drill: drill)),
                 );
               },
             ),
@@ -92,7 +91,7 @@ class FootworkScreen extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => ActiveDrillSessionScreen(drill: drill)),
+                      MaterialPageRoute(builder: (_) => DrillIntroScreen(drill: drill)),
                     );
                   },
                   padding: const EdgeInsets.all(16),

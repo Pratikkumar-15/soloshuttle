@@ -2,7 +2,7 @@ class Tutorial {
   final String id;
   final String title;
   final String description;
-  final String category; // 'Strokes', 'Net Play', 'Serves', 'Defense'
+  final String category; // 'Front Court', 'Mid Court', 'Rear Court'
   final String level; // 'Beginner', 'Intermediate', 'Advanced'
   final String duration;
   final String thumbnailUrl;
@@ -12,6 +12,11 @@ class Tutorial {
   final String bodyPosition;
   final List<String> commonMistakes;
   final String coachTip;
+  final List<String> matchSituations;
+  final List<String> learningObjectives;
+  final List<String> practiceSuggestions;
+  final String youtubeUrl;
+  final String youtubeTitle;
 
   const Tutorial({
     required this.id,
@@ -27,5 +32,11 @@ class Tutorial {
     required this.bodyPosition,
     required this.commonMistakes,
     required this.coachTip,
+    this.matchSituations = const [],
+    this.learningObjectives = const [],
+    this.practiceSuggestions = const [],
+    this.youtubeUrl = '',
+    this.youtubeTitle = '',
   });
 }
+

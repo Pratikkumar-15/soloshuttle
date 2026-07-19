@@ -6,14 +6,13 @@ import '../providers/user_provider.dart';
 import '../presentation/widgets/app_card.dart';
 import '../presentation/widgets/gradient_hero_card.dart';
 import '../presentation/widgets/section_title.dart';
-import '../presentation/screens/voice_coach_screen.dart';
 import '../presentation/screens/reaction_training_screen.dart';
 import '../presentation/screens/tutorials_screen.dart';
-import '../presentation/screens/settings_screen.dart';
 import '../presentation/screens/notifications_screen.dart';
 import 'drills_screen.dart';
 import 'footwork_screen.dart';
-import 'training_session_screen.dart';
+import '../providers/training_provider.dart';
+import '../presentation/screens/drill_intro_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -22,6 +21,9 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final user = userProvider.user;
+    final trainingProvider = Provider.of<TrainingProvider>(context);
+    final todaysPlan = trainingProvider.todaysTrainingPlan;
+    final todaysDrill = trainingProvider.todaysDrill;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -115,16 +117,16 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // TODAY'S TRAINING CARD
+              // DYNAMIC TODAY'S TRAINING CARD
               GradientHeroCard(
-                tag: "TODAY'S TRAINING",
-                title: 'Ready to Smash?',
-                subtitle: 'Daily Footwork & Shadow Practice • 15 min',
-                buttonText: 'START TRAINING',
+                tag: "${todaysPlan.dayName.toUpperCase()}'S TRAINING • ${todaysPlan.pillar.toUpperCase()}",
+                title: todaysPlan.title,
+                subtitle: todaysPlan.subtitle,
+                buttonText: 'START TODAY\'S TRAINING',
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const TrainingSessionScreen()),
+                    MaterialPageRoute(builder: (_) => DrillIntroScreen(drill: todaysDrill)),
                   );
                 },
               ),
@@ -167,12 +169,12 @@ class HomeScreen extends StatelessWidget {
                   ),
                   FeatureCard(
                     image: 'assets/images/icons/voice_coach.png',
-                    iconFallback: Icons.record_voice_over_rounded,
-                    title: 'Voice Coach',
+                    iconFallback: Icons.bolt_rounded,
+                    title: 'Reaction Drill',
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const VoiceCoachScreen()),
+                        MaterialPageRoute(builder: (_) => const ReactionTrainingScreen()),
                       );
                     },
                   ),
@@ -192,13 +194,14 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // REACTION DRILL BANNER
+              // AI DAILY CHALLENGE BANNER
               AppCard(
                 backgroundColor: AppColors.surface,
+                borderColor: AppColors.orange.withValues(alpha: 0.4),
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const ReactionTrainingScreen()),
+                    MaterialPageRoute(builder: (_) => const DrillsScreen()),
                   );
                 },
                 child: Row(
@@ -209,7 +212,7 @@ class HomeScreen extends StatelessWidget {
                         color: AppColors.orange.withValues(alpha: 0.18),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.bolt_rounded, color: AppColors.orange, size: 28),
+                      child: const Icon(Icons.casino_rounded, color: AppColors.orange, size: 28),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -217,11 +220,11 @@ class HomeScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Reaction Speed Drill',
+                            'Daily Training Challenge',
                             style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            'Random directions & instant callouts',
+                            '150 Shadow Footwork Steps • +50 XP Reward',
                             style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 12),
                           ),
                         ],
