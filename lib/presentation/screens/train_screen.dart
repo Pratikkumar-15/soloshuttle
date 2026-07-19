@@ -92,7 +92,7 @@ class TrainScreen extends StatelessWidget {
               context,
               title: 'Solo Drills',
               subtitle: 'Stroke repetition, serve practice, wall drives & fitness',
-              badge: '30+ Drills',
+              badge: 'Crucial',
               badgeColor: AppColors.cyan,
               icon: Icons.sports_tennis_rounded,
               imageAsset: 'assets/images/icons/solo_drills.png',
@@ -159,47 +159,53 @@ class TrainScreen extends StatelessWidget {
   }) {
     return AppCard(
       onTap: onTap,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            height: 56,
-            width: 56,
+            height: 52,
+            width: 52,
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: badgeColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: badgeColor.withValues(alpha: 0.3),
+                width: 1,
+              ),
             ),
             child: imageAsset != null
                 ? Image.asset(
                     imageAsset,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => Icon(icon, color: badgeColor, size: 28),
+                    errorBuilder: (_, _, _) => Icon(icon, color: badgeColor, size: 26),
                   )
-                : Icon(icon, color: badgeColor, size: 28),
+                : Icon(icon, color: badgeColor, size: 26),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.poppins(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    BadgeTag(label: badge, color: badgeColor),
-                  ],
+                BadgeTag(label: badge, color: badgeColor),
+                const SizedBox(height: 5),
+                Text(
+                  title,
+                  maxLines: 2,
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    height: 1.25,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.poppins(
                     color: AppColors.textMuted,
                     fontSize: 12,
@@ -209,7 +215,7 @@ class TrainScreen extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 16),
         ],
       ),

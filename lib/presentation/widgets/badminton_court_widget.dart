@@ -88,7 +88,10 @@ class BadmintonCourtWidget extends StatelessWidget {
   }
 
   Widget _buildZoneTarget(String directionKey, String label) {
-    final isTarget = activeDirection.toUpperCase().contains(directionKey);
+    final dirUpper = activeDirection.toUpperCase();
+    final isTarget = dirUpper.contains(directionKey) ||
+        (directionKey == 'BACK LEFT' && dirUpper.contains('REAR LEFT')) ||
+        (directionKey == 'BACK RIGHT' && dirUpper.contains('REAR RIGHT'));
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),

@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import '../core/theme/app_colors.dart';
 import '../providers/training_provider.dart';
 import '../presentation/widgets/app_card.dart';
-import '../presentation/widgets/badge_tag.dart';
 import '../presentation/widgets/section_title.dart';
+import '../presentation/widgets/drill_catalog_card.dart';
 import '../presentation/widgets/gradient_hero_card.dart';
 import '../presentation/screens/drill_intro_screen.dart';
 
@@ -28,7 +28,7 @@ class DrillsScreen extends StatelessWidget {
             Image.asset(
               'assets/images/icons/solo_drills.png',
               width: 28,
-              errorBuilder: (_, __, ___) => const Icon(Icons.sports_tennis_rounded, color: AppColors.primaryGreen),
+              errorBuilder: (_, _, _) => const Icon(Icons.sports_tennis_rounded, color: AppColors.primaryGreen),
             ),
             const SizedBox(width: 10),
             Text(
@@ -74,65 +74,17 @@ class DrillsScreen extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: soloDrills.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final drill = soloDrills[index];
-                return AppCard(
+                return DrillCatalogCard(
+                  drill: drill,
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => DrillIntroScreen(drill: drill)),
                     );
                   },
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Container(
-                        height: 48,
-                        width: 48,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryGreen.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(drill.emoji, style: const TextStyle(fontSize: 24)),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  drill.title,
-                                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(width: 8),
-                                BadgeTag(label: drill.difficulty, color: AppColors.cyan),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              drill.description,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(drill.duration, style: GoogleFonts.poppins(color: AppColors.primaryGreen, fontSize: 12, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 6),
-                          const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white60, size: 14),
-                        ],
-                      ),
-                    ],
-                  ),
                 );
               },
             ),
@@ -148,7 +100,7 @@ class DrillsScreen extends StatelessWidget {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: favorites.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 14),
+                  separatorBuilder: (_, _) => const SizedBox(width: 14),
                   itemBuilder: (context, index) {
                     final drill = favorites[index];
                     return SizedBox(

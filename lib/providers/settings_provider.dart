@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/services/voice_coach_service.dart';
 
 class SettingsProvider extends ChangeNotifier {
   bool _isDarkMode = true;
@@ -9,6 +10,7 @@ class SettingsProvider extends ChangeNotifier {
   double _voiceVolume = 0.9;
   String _unitSystem = 'Metric (km/m)';
   String _language = 'English';
+  String _voiceProfile = 'male_normal'; // 'male_normal', 'male_deep', 'female_normal', 'female_deep'
 
   bool get isDarkMode => _isDarkMode;
   bool get isSoundEnabled => _isSoundEnabled;
@@ -17,6 +19,7 @@ class SettingsProvider extends ChangeNotifier {
   double get voiceVolume => _voiceVolume;
   String get unitSystem => _unitSystem;
   String get language => _language;
+  String get voiceProfile => _voiceProfile;
 
   SettingsProvider() {
     _loadSettings();
@@ -32,6 +35,9 @@ class SettingsProvider extends ChangeNotifier {
       _voiceVolume = prefs.getDouble('voiceVolume') ?? 0.9;
       _unitSystem = prefs.getString('unitSystem') ?? 'Metric (km/m)';
       _language = prefs.getString('language') ?? 'English';
+      _voiceProfile = prefs.getString('voiceProfile') ?? 'male_normal';
+
+      VoiceCoachService().setVoiceProfile(_voiceProfile);
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading settings: $e');
@@ -64,6 +70,15 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('voiceVolume', value);
+    VoiceCoachService().setVolume(value);
+  }
+
+  Future<void> setVoiceProfile(String profileId) async {
+    _voiceProfile = profileId;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('voiceProfile', profileId);
+    VoiceCoachService().setVoiceProfile(profileId);
   }
 
   Future<void> setUnitSystem(String unit) async {

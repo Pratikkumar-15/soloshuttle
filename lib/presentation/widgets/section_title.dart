@@ -19,14 +19,19 @@ class SectionTitle extends StatelessWidget {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
+          const SizedBox(width: 8),
           TextButton(
             onPressed: onActionPressed,
             child: Text(

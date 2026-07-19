@@ -242,17 +242,21 @@ class ProfileScreen extends StatelessWidget {
                 final isUnlocked = ach['status'] == 'UNLOCKED';
                 return AppCard(
                   onTap: () => _showAchievementsModal(context),
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                   backgroundColor: isUnlocked ? AppColors.surface : AppColors.surfaceLight.withValues(alpha: 0.4),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(ach['emoji']!, style: const TextStyle(fontSize: 28)),
-                      const SizedBox(height: 6),
-                      Text(
-                        ach['title']!,
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                      Text(ach['emoji']!, style: const TextStyle(fontSize: 26)),
+                      const SizedBox(height: 4),
+                      Flexible(
+                        child: Text(
+                          ach['title']!,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.poppins(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.bold),
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -295,12 +299,18 @@ class ProfileScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(title, style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 14)),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              color: isHighlighted ? AppColors.primaryGreen : Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.poppins(
+                color: isHighlighted ? AppColors.primaryGreen : Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],

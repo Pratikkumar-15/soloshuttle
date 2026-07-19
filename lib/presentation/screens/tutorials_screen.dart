@@ -528,7 +528,7 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
             child: ListView.separated(
               padding: const EdgeInsets.all(20),
               itemCount: _filteredTutorials.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 14),
+              separatorBuilder: (_, _) => const SizedBox(height: 14),
               itemBuilder: (context, index) {
                 final tut = _filteredTutorials[index];
                 return AppCard(
@@ -550,10 +550,11 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
                               children: [
                                 BadgeTag(label: tut.category, color: AppColors.purple),
-                                const SizedBox(width: 6),
                                 BadgeTag(label: tut.level, color: AppColors.cyan),
                               ],
                             ),
@@ -614,12 +615,12 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
                     children: [
                       BadgeTag(label: tutorial.category, color: AppColors.purple),
-                      const SizedBox(width: 8),
                       BadgeTag(label: tutorial.level, color: AppColors.cyan),
-                      const SizedBox(width: 8),
                       BadgeTag(label: tutorial.duration, color: AppColors.orange),
                     ],
                   ),
@@ -627,49 +628,6 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
                   Text(tutorial.title, style: GoogleFonts.poppins(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 6),
                   Text(tutorial.description, style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 13, height: 1.45)),
-                  const SizedBox(height: 24),
-
-                  // YOUTUBE VIDEO TUTORIAL LAUNCHERS
-                  Column(
-                    children: [
-                      AppCard(
-                        backgroundColor: Colors.red.withValues(alpha: 0.15),
-                        borderColor: Colors.redAccent,
-                        onTap: () => _launchYouTubeSearch(tutorial.title, 'Badminton Insight'),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 24),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Watch Video Tutorial on YouTube',
-                                    style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                                  ),
-                                  Text(
-                                    '${tutorial.title} - Coaching Video',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Icon(Icons.open_in_new_rounded, color: Colors.white70, size: 18),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
                   const SizedBox(height: 24),
 
                   // 1. GRIP
@@ -802,6 +760,48 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
                             style: GoogleFonts.poppins(color: AppColors.electricGreen, fontSize: 13, fontWeight: FontWeight.w600),
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // 10. YOUTUBE VIDEO TUTORIAL LINK (LAST AFTER READING EVERYTHING ABOUT THE SHOT)
+                  _buildSectionHeader('📹 Video Coaching Tutorial'),
+                  const SizedBox(height: 8),
+                  AppCard(
+                    backgroundColor: Colors.red.withValues(alpha: 0.15),
+                    borderColor: Colors.redAccent,
+                    onTap: () => _launchYouTubeSearch(tutorial.title, 'Badminton Insight'),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 24),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Watch Video Tutorial on YouTube',
+                                style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                              ),
+                              Text(
+                                '${tutorial.title} - Coaching Video',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.open_in_new_rounded, color: Colors.white70, size: 18),
                       ],
                     ),
                   ),

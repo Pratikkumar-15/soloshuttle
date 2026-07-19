@@ -62,8 +62,8 @@ class _ActiveReactionSessionScreenState extends State<ActiveReactionSessionScree
     {'label': 'FRONT RIGHT', 'voice': 'Front Right'},
     {'label': 'MID LEFT', 'voice': 'Mid Left'},
     {'label': 'MID RIGHT', 'voice': 'Mid Right'},
-    {'label': 'REAR LEFT', 'voice': 'Rear Left'},
-    {'label': 'REAR RIGHT', 'voice': 'Rear Right'},
+    {'label': 'BACK LEFT', 'voice': 'Back Left'},
+    {'label': 'BACK RIGHT', 'voice': 'Back Right'},
   ];
 
   static const List<Map<String, dynamic>> _numberCues = [
@@ -71,16 +71,16 @@ class _ActiveReactionSessionScreenState extends State<ActiveReactionSessionScree
     {'num': '2', 'voice': 'Two', 'corner': 'FRONT RIGHT'},
     {'num': '3', 'voice': 'Three', 'corner': 'MID LEFT'},
     {'num': '4', 'voice': 'Four', 'corner': 'MID RIGHT'},
-    {'num': '5', 'voice': 'Five', 'corner': 'REAR LEFT'},
-    {'num': '6', 'voice': 'Six', 'corner': 'REAR RIGHT'},
+    {'num': '5', 'voice': 'Five', 'corner': 'BACK LEFT'},
+    {'num': '6', 'voice': 'Six', 'corner': 'BACK RIGHT'},
   ];
 
   @override
   void initState() {
     super.initState();
     SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
     ]);
     _roundTimeRemaining = widget.roundDurationSeconds;
     _startCountdown();
@@ -333,18 +333,25 @@ class _ActiveReactionSessionScreenState extends State<ActiveReactionSessionScree
   }
 
   Widget _buildActiveCueDisplay() {
-    return Row(
+    return Column(
       children: [
-        // Left Side: Big Callout Box
+        // Top: Big Callout Box
         Expanded(
           flex: 3,
           child: Container(
+            width: double.infinity,
             alignment: Alignment.center,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.5), width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primaryGreen.withValues(alpha: 0.15),
+                  blurRadius: 16,
+                ),
+              ],
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -383,9 +390,9 @@ class _ActiveReactionSessionScreenState extends State<ActiveReactionSessionScree
           ),
         ),
 
-        const SizedBox(width: 16),
+        const SizedBox(height: 14),
 
-        // Right Side: Live Court Map
+        // Bottom: Live Court Map
         Expanded(
           flex: 2,
           child: Center(
@@ -564,22 +571,71 @@ class _ActiveReactionSessionScreenState extends State<ActiveReactionSessionScree
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'REACTION RESULTS',
-              style: GoogleFonts.poppins(color: AppColors.electricGreen, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: AppColors.primaryGreen,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.emoji_events_rounded, color: Colors.black, size: 36),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
+            Text(
+              'CONGRATULATIONS!',
+              style: GoogleFonts.poppins(color: AppColors.electricGreen, fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              'Reaction Training Completed',
+              style: GoogleFonts.poppins(color: Colors.white70, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
             Wrap(
               alignment: WrapAlignment.center,
               spacing: 12,
               runSpacing: 10,
               children: [
                 _buildResultCard('Accuracy', '96%'),
-                _buildResultCard('Reaction Time', '${widget.paceSpeedSeconds}s'),
+                _buildResultCard('Pace Speed', '${widget.paceSpeedSeconds}s'),
                 _buildResultCard('XP Earned', '+$xp XP'),
-                _buildResultCard('Best Round', 'Round 2'),
+                _buildResultCard('Total Calls', '$_totalReactionsLogged'),
               ],
             ),
+            if (_feedbackController.text.trim().isNotEmpty || _userRating > 0) ...[
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(12),
+                constraints: const BoxConstraints(maxWidth: 420),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.orange.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.star_rounded, color: AppColors.orange, size: 22),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Your Rating: $_userRating / 5 Stars',
+                            style: GoogleFonts.poppins(color: AppColors.orange, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                          if (_feedbackController.text.trim().isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              '"${_feedbackController.text.trim()}"',
+                              style: GoogleFonts.poppins(color: Colors.white70, fontSize: 11.5, fontStyle: FontStyle.italic),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.all(12),

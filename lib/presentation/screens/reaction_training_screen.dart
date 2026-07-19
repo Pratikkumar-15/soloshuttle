@@ -36,8 +36,8 @@ class _ReactionTrainingScreenState extends State<ReactionTrainingScreen> {
     {'num': '2', 'corner': 'Front Right'},
     {'num': '3', 'corner': 'Mid Left'},
     {'num': '4', 'corner': 'Mid Right'},
-    {'num': '5', 'corner': 'Rear Left'},
-    {'num': '6', 'corner': 'Rear Right'},
+    {'num': '5', 'corner': 'Back Left'},
+    {'num': '6', 'corner': 'Back Right'},
   ];
 
   void _startSession() {

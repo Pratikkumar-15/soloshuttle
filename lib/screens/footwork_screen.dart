@@ -3,8 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../core/theme/app_colors.dart';
 import '../providers/training_provider.dart';
-import '../presentation/widgets/app_card.dart';
-import '../presentation/widgets/badge_tag.dart';
+import '../presentation/widgets/drill_catalog_card.dart';
 import '../presentation/widgets/gradient_hero_card.dart';
 import '../presentation/screens/drill_intro_screen.dart';
 
@@ -30,7 +29,7 @@ class FootworkScreen extends StatelessWidget {
             Image.asset(
               'assets/images/icons/footwork.png',
               width: 28,
-              errorBuilder: (_, __, ___) => const Icon(Icons.directions_run_rounded, color: AppColors.primaryGreen),
+              errorBuilder: (_, _, _) => const Icon(Icons.directions_run_rounded, color: AppColors.primaryGreen),
             ),
             const SizedBox(width: 10),
             Text('Footwork Module', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
@@ -84,65 +83,17 @@ class FootworkScreen extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: footworkDrills.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final drill = footworkDrills[index];
-                return AppCard(
+                return DrillCatalogCard(
+                  drill: drill,
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => DrillIntroScreen(drill: drill)),
                     );
                   },
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Container(
-                        height: 50,
-                        width: 50,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryGreen.withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(drill.emoji, style: const TextStyle(fontSize: 24)),
-                      ),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  drill.title,
-                                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(width: 8),
-                                BadgeTag(label: drill.difficulty, color: AppColors.cyan),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              drill.description,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(drill.duration, style: GoogleFonts.poppins(color: AppColors.primaryGreen, fontSize: 12, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 6),
-                          const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white60, size: 14),
-                        ],
-                      ),
-                    ],
-                  ),
                 );
               },
             ),

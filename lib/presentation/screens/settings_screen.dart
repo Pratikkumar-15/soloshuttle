@@ -1,18 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/settings_provider.dart';
-import '../../providers/user_provider.dart';
 import '../widgets/app_card.dart';
 import '../widgets/app_button.dart';
+
+import '../../core/services/voice_coach_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
-  static const List<String> units = ['Metric (km/m)', 'Imperial (mi/ft)'];
-  static const List<String> languages = ['English', 'Spanish', 'French', 'German', 'Mandarin', 'Bahasa Indonesia'];
+  static const List<Map<String, String>> _voiceProfiles = [
+    {
+      'id': 'male_normal',
+      'name': 'Coach Alex',
+      'tag': 'Normal Pitch',
+      'desc': 'Energetic & clear sports coach',
+      'sample': 'Ready position. Move quickly to the corner!',
+    },
+    {
+      'id': 'male_deep',
+      'name': 'Coach Marcus',
+      'tag': 'Deep Tone',
+      'desc': 'Deep & commanding power voice',
+      'sample': 'Focus. Explode to the court corner!',
+    },
+    {
+      'id': 'female_normal',
+      'name': 'Coach Sarah',
+      'tag': 'Normal Pitch',
+      'desc': 'Crisp & dynamic athletic guide',
+      'sample': 'Stay light on your feet. Recover fast!',
+    },
+    {
+      'id': 'female_deep',
+      'name': 'Coach Elena',
+      'tag': 'Deep Tone',
+      'desc': 'Warm & calm deep coaching voice',
+      'sample': 'Stay low. Drive through the shuttle!',
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +65,7 @@ class SettingsScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     SwitchListTile(
-                      activeColor: AppColors.primaryGreen,
+                      activeTrackColor: AppColors.primaryGreen,
                       title: Text('Dark Mode', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
                       subtitle: Text('Default dark sports aesthetic', style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 12)),
                       value: settings.isDarkMode,
@@ -45,27 +73,123 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     const Divider(color: Colors.white12),
                     SwitchListTile(
-                      activeColor: AppColors.primaryGreen,
+                      activeTrackColor: AppColors.primaryGreen,
                       title: Text('Sound FX & Audio Beeps', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
                       value: settings.isSoundEnabled,
                       onChanged: (v) => settings.setSoundEnabled(v),
                     ),
                     const Divider(color: Colors.white12),
                     SwitchListTile(
-                      activeColor: AppColors.primaryGreen,
+                      activeTrackColor: AppColors.primaryGreen,
                       title: Text('Voice Guidance Speech', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
                       value: settings.isVoiceGuidanceEnabled,
                       onChanged: (v) => settings.setVoiceGuidanceEnabled(v),
                     ),
                     const Divider(color: Colors.white12),
                     SwitchListTile(
-                      activeColor: AppColors.primaryGreen,
+                      activeTrackColor: AppColors.primaryGreen,
                       title: Text('Daily Workout Notifications', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
                       value: settings.isNotificationsEnabled,
                       onChanged: (v) => settings.setNotificationsEnabled(v),
                     ),
                   ],
                 ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // AI COACH VOICE SELECTOR
+              _buildSectionHeader('AI COACH VOICE SELECTOR'),
+              Column(
+                children: _voiceProfiles.map((v) {
+                  final isSelected = settings.voiceProfile == v['id'];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: AppCard(
+                      onTap: () {
+                        settings.setVoiceProfile(v['id']!);
+                        VoiceCoachService().speak(v['sample']!);
+                      },
+                      borderColor: isSelected ? AppColors.primaryGreen : Colors.white12,
+                      backgroundColor: isSelected
+                          ? AppColors.primaryGreen.withValues(alpha: 0.12)
+                          : AppColors.surface,
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppColors.primaryGreen.withValues(alpha: 0.25)
+                                  : Colors.white10,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.record_voice_over_rounded,
+                              color: isSelected ? AppColors.primaryGreen : Colors.white70,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Wrap(
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  spacing: 6,
+                                  runSpacing: 4,
+                                  children: [
+                                    Text(
+                                      v['name']!,
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.cyan.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(color: AppColors.cyan.withValues(alpha: 0.3)),
+                                      ),
+                                      child: Text(
+                                        v['tag']!,
+                                        style: GoogleFonts.poppins(
+                                          color: AppColors.cyan,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  v['desc']!,
+                                  style: GoogleFonts.poppins(
+                                    color: AppColors.textMuted,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.volume_up_rounded, color: AppColors.electricGreen, size: 22),
+                            tooltip: 'Preview Voice',
+                            onPressed: () {
+                              settings.setVoiceProfile(v['id']!);
+                              VoiceCoachService().speak(v['sample']!);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
 
               const SizedBox(height: 24),
@@ -91,48 +215,13 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 24),
-
-              _buildSectionHeader('UNITS & LANGUAGE'),
-              AppCard(
-                child: Column(
-                  children: [
-                    ListTile(
-                      title: Text('Units System', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(settings.unitSystem, style: GoogleFonts.poppins(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 14),
-                        ],
-                      ),
-                      onTap: () => _showPickerModal(context, 'Select Units System', units, settings.unitSystem, (u) => settings.setUnitSystem(u)),
-                    ),
-                    const Divider(color: Colors.white12),
-                    ListTile(
-                      title: Text('App Language', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(settings.language, style: GoogleFonts.poppins(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 14),
-                        ],
-                      ),
-                      onTap: () => _showPickerModal(context, 'Select Language', languages, settings.language, (l) => settings.setLanguage(l)),
-                    ),
-                  ],
-                ),
-              ),
-
               const SizedBox(height: 28),
 
               AppButton(
-                text: 'RESET ALL APP DATA',
-                type: AppButtonType.danger,
-                icon: Icons.restore_rounded,
-                onPressed: () => _showResetConfirmation(context),
+                text: 'CLEAR CACHE',
+                type: AppButtonType.outline,
+                icon: Icons.cleaning_services_rounded,
+                onPressed: () => _clearTemporaryCache(context),
               ),
             ],
           );
@@ -151,71 +240,15 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  void _showPickerModal(BuildContext context, String title, List<String> options, String currentSelection, Function(String) onSelect) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+  void _clearTemporaryCache(BuildContext context) {
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Cache cleared successfully.'),
+        backgroundColor: AppColors.primaryGreen,
+        behavior: SnackBarBehavior.floating,
       ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: GoogleFonts.poppins(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 14),
-              ...options.map((opt) {
-                final isSelected = opt == currentSelection;
-                return ListTile(
-                  title: Text(opt, style: GoogleFonts.poppins(color: isSelected ? AppColors.primaryGreen : Colors.white, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
-                  trailing: isSelected ? const Icon(Icons.check_rounded, color: AppColors.primaryGreen) : null,
-                  onTap: () {
-                    onSelect(opt);
-                    Navigator.pop(context);
-                  },
-                );
-              }),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showResetConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: AppColors.surface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('Reset App Data?', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
-          content: Text('This will reset your local stats, XP, and training history.', style: GoogleFonts.poppins(color: AppColors.textMuted)),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('CANCEL'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.red, foregroundColor: Colors.white),
-              onPressed: () async {
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.clear();
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('App data reset successfully.')),
-                  );
-                }
-              },
-              child: const Text('RESET DATA'),
-            ),
-          ],
-        );
-      },
     );
   }
 }

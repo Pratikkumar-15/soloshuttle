@@ -472,7 +472,7 @@ class TrainingProvider extends ChangeNotifier {
         commonMistakes: ['Dragging back foot during mid-court drives.', 'Rising too tall at center base.'],
         phases: [
           DrillPhase(
-            title: 'Briefing',
+            title: 'Get Ready',
             description: '30 sec review of 6-corner court geometry.',
             durationSeconds: 30,
             type: PhaseType.explanation,
@@ -541,7 +541,7 @@ class TrainingProvider extends ChangeNotifier {
         commonMistakes: ['Pausing at the bottom of the lunge before pushing back.'],
         phases: [
           DrillPhase(
-            title: 'Briefing',
+            title: 'Get Ready',
             description: '30 sec setup & quad activation.',
             durationSeconds: 30,
             type: PhaseType.explanation,
@@ -597,7 +597,7 @@ class TrainingProvider extends ChangeNotifier {
         commonMistakes: ['Jumping too high in the air.', 'Flat-footed landing.'],
         phases: [
           DrillPhase(
-            title: 'Briefing',
+            title: 'Get Ready',
             description: '30 sec pre-hop timing breakdown.',
             durationSeconds: 30,
             type: PhaseType.explanation,
@@ -653,7 +653,7 @@ class TrainingProvider extends ChangeNotifier {
         commonMistakes: ['Half-hearted swings without proper body rotation.'],
         phases: [
           DrillPhase(
-            title: 'Briefing',
+            title: 'Get Ready',
             description: '30 sec rally pattern overview.',
             durationSeconds: 30,
             type: PhaseType.explanation,
@@ -724,7 +724,7 @@ class TrainingProvider extends ChangeNotifier {
         commonMistakes: ['Hitting shuttle flat instead of downward.', 'Tensing grip too early.'],
         phases: [
           DrillPhase(
-            title: 'Briefing',
+            title: 'Get Ready',
             description: '30 sec smash mechanics breakdown.',
             durationSeconds: 30,
             type: PhaseType.explanation,
@@ -792,7 +792,7 @@ class TrainingProvider extends ChangeNotifier {
         commonMistakes: ['Using full arm swing instead of compact wrist recoil.'],
         phases: [
           DrillPhase(
-            title: 'Briefing',
+            title: 'Get Ready',
             description: '30 sec wall drive setup.',
             durationSeconds: 30,
             type: PhaseType.explanation,
@@ -860,7 +860,7 @@ class TrainingProvider extends ChangeNotifier {
         commonMistakes: ['Jerky wrist flicking on low serve.', 'Serving above waist height.'],
         phases: [
           DrillPhase(
-            title: 'Briefing',
+            title: 'Get Ready',
             description: '30 sec serve mechanics review.',
             durationSeconds: 30,
             type: PhaseType.explanation,
@@ -915,7 +915,7 @@ class TrainingProvider extends ChangeNotifier {
         commonMistakes: ['Gripping racket too hard at net.', 'Reaching late below net tape line.'],
         phases: [
           DrillPhase(
-            title: 'Briefing',
+            title: 'Get Ready',
             description: '30 sec net touch breakdown.',
             durationSeconds: 30,
             type: PhaseType.explanation,
@@ -970,7 +970,7 @@ class TrainingProvider extends ChangeNotifier {
         commonMistakes: ['Striking shuttle behind head line.'],
         phases: [
           DrillPhase(
-            title: 'Briefing',
+            title: 'Get Ready',
             description: '30 sec overhead clear mechanics.',
             durationSeconds: 30,
             type: PhaseType.explanation,

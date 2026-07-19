@@ -19,10 +19,14 @@ class StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: accentColor.withValues(alpha: 0.2),
+          width: 1,
+        ),
         boxShadow: const [
           BoxShadow(
             color: Colors.black26,
@@ -34,14 +38,19 @@ class StatCard extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: accentColor, size: 28),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          Icon(icon, color: accentColor, size: 26),
+          const SizedBox(height: 6),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(height: 2),
@@ -52,7 +61,7 @@ class StatCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.poppins(
               color: AppColors.textMuted,
-              fontSize: 12,
+              fontSize: 11.5,
             ),
           ),
         ],

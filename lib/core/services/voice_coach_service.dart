@@ -3,22 +3,59 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 class VoiceCoachService {
+  static final VoiceCoachService _instance = VoiceCoachService._internal();
+  factory VoiceCoachService() => _instance;
+  VoiceCoachService._internal() {
+    _initTts();
+  }
+
   final FlutterTts _tts = FlutterTts();
   bool _isInitialized = false;
-  double _speechRate = 0.5; // Optimal clarity for sports court callouts
+  double _speechRate = 0.52; // Crisp, energetic, zero-delay sports coaching pace
   double _pitch = 1.0;
   double _volume = 1.0;
   List<dynamic> _availableVoices = [];
   String? _selectedVoice;
+
+  final ValueNotifier<bool> isSpeaking = ValueNotifier<bool>(false);
+  final ValueNotifier<String> currentSpokenText = ValueNotifier<String>('');
+
+  String _selectedVoiceProfile = 'male_normal';
 
   double get speechRate => _speechRate;
   double get pitch => _pitch;
   double get volume => _volume;
   List<dynamic> get availableVoices => _availableVoices;
   String? get selectedVoice => _selectedVoice;
+  String get selectedVoiceProfile => _selectedVoiceProfile;
 
-  VoiceCoachService() {
-    _initTts();
+  Future<void> setVoiceProfile(String profileId) async {
+    _selectedVoiceProfile = profileId;
+    switch (profileId) {
+      case 'male_deep':
+        _pitch = 0.72;
+        _speechRate = 0.50;
+        break;
+      case 'female_normal':
+        _pitch = 1.20;
+        _speechRate = 0.52;
+        break;
+      case 'female_deep':
+        _pitch = 0.92;
+        _speechRate = 0.50;
+        break;
+      case 'male_normal':
+      default:
+        _pitch = 1.0;
+        _speechRate = 0.52;
+        break;
+    }
+    try {
+      await _tts.setPitch(_pitch);
+      await _tts.setSpeechRate(_speechRate);
+    } catch (e) {
+      debugPrint('Error updating voice profile pitch/rate: $e');
+    }
   }
 
   Future<void> _initTts() async {
@@ -28,7 +65,19 @@ class VoiceCoachService {
       await _tts.setVolume(_volume);
       await _tts.setPitch(_pitch);
 
-      // Mobile audio category & focus configuration for maximum volume & clarity
+      _tts.setStartHandler(() {
+        isSpeaking.value = true;
+      });
+
+      _tts.setCompletionHandler(() {
+        isSpeaking.value = false;
+      });
+
+      _tts.setErrorHandler((msg) {
+        isSpeaking.value = false;
+      });
+
+      // Mobile audio category & focus configuration for zero latency & maximum clarity
       if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
         await _tts.setSharedInstance(true);
         await _tts.setIosAudioCategory(
@@ -39,15 +88,13 @@ class VoiceCoachService {
           ],
           IosTextToSpeechAudioMode.voicePrompt,
         );
-        await _tts.awaitSpeakCompletion(true);
+        await _tts.awaitSpeakCompletion(false);
       }
 
-      // Query high-quality voices if supported by device engine
       try {
         final voices = await _tts.getVoices;
         if (voices != null && voices is List) {
           _availableVoices = voices;
-          // Prefer English high-quality voice if available
           for (var voice in voices) {
             if (voice is Map && voice['name'] != null && voice['locale'] != null) {
               final name = voice['name'].toString().toLowerCase();
@@ -71,6 +118,8 @@ class VoiceCoachService {
   }
 
   Future<void> speak(String text) async {
+    currentSpokenText.value = text;
+    isSpeaking.value = true;
     if (!_isInitialized) {
       await _initTts();
     }
@@ -78,12 +127,14 @@ class VoiceCoachService {
       await _tts.stop();
       await _tts.speak(text);
     } catch (e) {
+      isSpeaking.value = false;
       debugPrint('Error speaking text "$text": $e');
     }
   }
 
   Future<void> stop() async {
     try {
+      isSpeaking.value = false;
       await _tts.stop();
     } catch (e) {
       debugPrint('Error stopping TTS: $e');
