@@ -3,189 +3,179 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 
-class HexagonRadarChart extends StatelessWidget {
+class HexagonRadarChart extends StatefulWidget {
   final Map<String, int> skillRatings;
   final double size;
 
   const HexagonRadarChart({
     super.key,
     required this.skillRatings,
-    this.size = 280,
+    this.size = 270,
   });
 
   @override
+  State<HexagonRadarChart> createState() => _HexagonRadarChartState();
+}
+
+class _HexagonRadarChartState extends State<HexagonRadarChart>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  static const List<String> categories = [
+    'Technical',
+    'Footwork',
+    'Tactical',
+    'Physical',
+    'Mental',
+    'Consistency',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    );
+    _controller.forward();
+  }
+
+  @override
+  void didUpdateWidget(covariant HexagonRadarChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.skillRatings != widget.skillRatings) {
+      _controller.forward(from: 0.0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final categories = ['Technical', 'Footwork', 'Tactical', 'Physical', 'Mental', 'Consistency'];
-    final values = categories.map((cat) => (skillRatings[cat] ?? 45).clamp(0, 100) / 100.0).toList();
+    final values = categories
+        .map((cat) => (widget.skillRatings[cat] ?? 50).clamp(0, 100) / 100.0)
+        .toList();
 
-    return Column(
-      children: [
-        SizedBox(
-          width: size,
-          height: size,
-          child: CustomPainterWidget(
-            categories: categories,
-            values: values,
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return SizedBox(
+          width: widget.size,
+          height: widget.size,
+          child: CustomPaint(
+            painter: CourtFormRadarChartPainter(
+              categories: categories,
+              values: values,
+              skillRatings: widget.skillRatings,
+              progress: _animation.value,
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        // Skill Values Grid Legend
-        Wrap(
-          spacing: 12,
-          runSpacing: 8,
-          alignment: WrapAlignment.center,
-          children: categories.map((cat) {
-            final val = skillRatings[cat] ?? 45;
-            Color dotColor;
-            switch (cat) {
-              case 'Technical':
-                dotColor = AppColors.primaryGreen;
-                break;
-              case 'Footwork':
-                dotColor = AppColors.cyan;
-                break;
-              case 'Tactical':
-                dotColor = AppColors.purple;
-                break;
-              case 'Physical':
-                dotColor = AppColors.orange;
-                break;
-              case 'Mental':
-                dotColor = AppColors.red;
-                break;
-              default:
-                dotColor = AppColors.electricGreen;
-            }
-
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: dotColor.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '$cat: ',
-                    style: GoogleFonts.poppins(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w500),
-                  ),
-                  Text(
-                    '$val/100',
-                    style: GoogleFonts.poppins(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      ],
+        );
+      },
     );
   }
 }
 
-class CustomPainterWidget extends StatelessWidget {
+class CourtFormRadarChartPainter extends CustomPainter {
   final List<String> categories;
   final List<double> values;
+  final Map<String, int> skillRatings;
+  final double progress;
 
-  const CustomPainterWidget({
-    super.key,
+  CourtFormRadarChartPainter({
     required this.categories,
     required this.values,
+    required this.skillRatings,
+    required this.progress,
   });
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: RadarChartPainter(categories: categories, values: values),
-    );
-  }
-}
-
-class RadarChartPainter extends CustomPainter {
-  final List<String> categories;
-  final List<double> values;
-
-  RadarChartPainter({required this.categories, required this.values});
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = min(size.width, size.height) / 2 - 38;
+    final radius = min(size.width, size.height) / 2 - 42;
     final numSides = categories.length;
     final angleStep = (2 * pi) / numSides;
 
-    // Paints
-    final gridPaint = Paint()
-      ..color = Colors.white12
+    final gridDashPaint = Paint()
+      ..color = AppColors.sageGray.withValues(alpha: 0.22)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
     final axisPaint = Paint()
-      ..color = Colors.white24
+      ..color = AppColors.sageGray.withValues(alpha: 0.18)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
-    final fillPaint = Paint()
-      ..color = AppColors.primaryGreen.withValues(alpha: 0.25)
+    final dataFillPaint = Paint()
+      ..color = AppColors.limeGreen.withValues(alpha: 0.28)
       ..style = PaintingStyle.fill;
 
-    final outlinePaint = Paint()
-      ..color = AppColors.electricGreen
+    final dataOutlinePaint = Paint()
+      ..color = AppColors.limeGreen
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5;
 
-    final vertexDotPaint = Paint()
-      ..color = AppColors.electricGreen
+    final skyBlueDotPaint = Paint()
+      ..color = AppColors.skyBlue
       ..style = PaintingStyle.fill;
 
-    // Draw concentric polygon grid webs (20%, 40%, 60%, 80%, 100%)
+    final goldCenterDotPaint = Paint()
+      ..color = AppColors.corkGold
+      ..style = PaintingStyle.fill;
+
+    // 1. Concentric dashed hexagonal grid rings
     for (int step = 1; step <= 5; step++) {
       final r = radius * (step / 5.0);
-      final path = Path();
-      for (int i = 0; i < numSides; i++) {
-        final angle = i * angleStep - (pi / 2);
-        final x = center.dx + r * cos(angle);
-        final y = center.dy + r * sin(angle);
-        if (i == 0) {
-          path.moveTo(x, y);
-        } else {
-          path.lineTo(x, y);
-        }
-      }
-      path.close();
-      canvas.drawPath(path, gridPaint);
+      _drawDashedPolygon(canvas, center, r, numSides, angleStep, gridDashPaint);
     }
 
-    // Draw axis lines and category labels
-    final textPainter = TextPainter(textDirection: TextDirection.ltr);
-
+    // 2. Axis lines & labels
     for (int i = 0; i < numSides; i++) {
       final angle = i * angleStep - (pi / 2);
       final x = center.dx + radius * cos(angle);
       final y = center.dy + radius * sin(angle);
-
       canvas.drawLine(center, Offset(x, y), axisPaint);
 
-      // Label positioning
-      final labelRadius = radius + 22;
+      final labelRadius = radius + 24;
       final lx = center.dx + labelRadius * cos(angle);
       final ly = center.dy + labelRadius * sin(angle);
+      final scoreVal = ((skillRatings[categories[i]] ?? 50) * progress).round();
 
-      textPainter.text = TextSpan(
-        text: categories[i],
-        style: GoogleFonts.poppins(
-          color: Colors.white,
-          fontSize: 10.5,
-          fontWeight: FontWeight.bold,
-        ),
+      final textSpan = TextSpan(
+        children: [
+          TextSpan(
+            text: '${categories[i].toUpperCase()}\n',
+            style: GoogleFonts.jetBrainsMono(
+              color: AppColors.sageGray,
+              fontSize: 9.5,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.0,
+            ),
+          ),
+          TextSpan(
+            text: '$scoreVal',
+            style: GoogleFonts.bebasNeue(
+              color: AppColors.chalkWhite,
+              fontSize: 16,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      );
+
+      final textPainter = TextPainter(
+        text: textSpan,
+        textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr,
       );
       textPainter.layout();
       textPainter.paint(
@@ -194,38 +184,73 @@ class RadarChartPainter extends CustomPainter {
       );
     }
 
-    // Draw value polygon
-    final valuePath = Path();
-    final points = <Offset>[];
+    // 3. Animated Lime-Green Data Polygon
+    final polygonPath = Path();
+    final vertexPoints = <Offset>[];
 
     for (int i = 0; i < numSides; i++) {
       final angle = i * angleStep - (pi / 2);
-      final val = values[i];
-      final r = radius * val;
+      final targetR = radius * values[i];
+      final r = targetR * progress; // Smooth animated expansion
       final x = center.dx + r * cos(angle);
       final y = center.dy + r * sin(angle);
-      final point = Offset(x, y);
-      points.add(point);
+      final pt = Offset(x, y);
+      vertexPoints.add(pt);
 
       if (i == 0) {
-        valuePath.moveTo(x, y);
+        polygonPath.moveTo(x, y);
       } else {
-        valuePath.lineTo(x, y);
+        polygonPath.lineTo(x, y);
       }
     }
-    valuePath.close();
+    polygonPath.close();
 
-    // Draw fill & outline
-    canvas.drawPath(valuePath, fillPaint);
-    canvas.drawPath(valuePath, outlinePaint);
+    canvas.drawPath(polygonPath, dataFillPaint);
+    canvas.drawPath(polygonPath, dataOutlinePaint);
 
-    // Draw vertex dots
-    for (final pt in points) {
-      canvas.drawCircle(pt, 4.5, vertexDotPaint);
-      canvas.drawCircle(pt, 2.0, Paint()..color = Colors.black);
+    // 4. Sky-Blue Dot Markers at each vertex
+    for (final pt in vertexPoints) {
+      canvas.drawCircle(pt, 5.0, skyBlueDotPaint);
+      canvas.drawCircle(pt, 2.0, Paint()..color = AppColors.courtBackground);
+    }
+
+    // 5. Gold Dot at center
+    canvas.drawCircle(center, 4.0, goldCenterDotPaint);
+    canvas.drawCircle(center, 2.0, Paint()..color = AppColors.courtBackground);
+  }
+
+  void _drawDashedPolygon(Canvas canvas, Offset center, double radius,
+      int sides, double angleStep, Paint paint) {
+    for (int i = 0; i < sides; i++) {
+      final a1 = i * angleStep - (pi / 2);
+      final a2 = (i + 1) * angleStep - (pi / 2);
+      final p1 = Offset(
+          center.dx + radius * cos(a1), center.dy + radius * sin(a1));
+      final p2 = Offset(
+          center.dx + radius * cos(a2), center.dy + radius * sin(a2));
+
+      final dx = p2.dx - p1.dx;
+      final dy = p2.dy - p1.dy;
+      final distance = sqrt(dx * dx + dy * dy);
+      const dashWidth = 4.0;
+      const dashSpace = 3.0;
+      double drawn = 0;
+
+      while (drawn < distance) {
+        final double x1 = p1.dx + (dx * (drawn / distance));
+        final double y1 = p1.dy + (dy * (drawn / distance));
+        drawn += dashWidth;
+        if (drawn > distance) drawn = distance;
+        final double x2 = p1.dx + (dx * (drawn / distance));
+        final double y2 = p1.dy + (dy * (drawn / distance));
+
+        canvas.drawLine(Offset(x1, y1), Offset(x2, y2), paint);
+        drawn += dashSpace;
+      }
     }
   }
 
   @override
-  bool shouldRepaint(covariant RadarChartPainter oldDelegate) => true;
+  bool shouldRepaint(covariant CourtFormRadarChartPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }

@@ -8,6 +8,7 @@ import '../../providers/training_provider.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_card.dart';
 import 'main_navigation_screen.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -24,7 +25,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _nameController = TextEditingController(text: '');
   final _usernameController = TextEditingController(text: '');
   
-  String _selectedAvatar = 'assets/images/logo.png';
+  String _selectedAvatar = 'assets/images/avatars/avatar_smash_pro.jpg';
   DateTime? _dateOfBirth;
   String? _selectedGender;
   String _dominantHand = 'Right-handed';
@@ -38,11 +39,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _weeklyReport = true;
 
   final List<String> _avatarPresets = [
-    'assets/images/logo.png',
-    'assets/images/icons/solo_drills.png',
-    'assets/images/icons/footwork.png',
-    'assets/images/icons/voice_coach.png',
-    'assets/images/icons/tutorials.png',
+    'assets/images/avatars/avatar_smash_pro.jpg',
+    'assets/images/avatars/avatar_speed_queen.jpg',
+    'assets/images/avatars/avatar_tactical_master.jpg',
+    'assets/images/avatars/avatar_court_ninja.jpg',
   ];
 
   @override
@@ -72,6 +72,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _completeOnboarding() async {
+    final status = await Permission.notification.request();
+    if (!status.isGranted) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You must allow notifications to proceed.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      if (status.isPermanentlyDenied) {
+        openAppSettings();
+      }
+      return;
+    }
+
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final trainingProvider = Provider.of<TrainingProvider>(context, listen: false);
 
@@ -508,26 +523,32 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Text('Dominant Racket Hand *', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
           const SizedBox(height: 8),
           Row(
-            children: ['Right-handed', 'Left-handed', 'Ambidextrous'].map((hand) {
+            children: ['Right-handed', 'Left-handed'].map((hand) {
               final isSelected = _dominantHand == hand;
               return Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: ChoiceChip(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    label: Text(
-                      hand.replaceAll('-handed', ''),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: isSelected ? Colors.black : Colors.white,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        fontSize: 12,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    label: Center(
+                      child: Text(
+                        hand,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: isSelected ? Colors.black : Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                     selected: isSelected,
                     selectedColor: AppColors.primaryGreen,
                     backgroundColor: AppColors.surface,
-                    onSelected: (_) => setState(() => _dominantHand = hand),
+                    onSelected: (_) {
+                      setState(() {
+                        _dominantHand = hand;
+                      });
+                    },
                   ),
                 ),
               );

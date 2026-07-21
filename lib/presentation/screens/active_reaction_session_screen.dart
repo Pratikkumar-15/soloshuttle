@@ -19,11 +19,20 @@ class ActiveReactionSessionScreen extends StatefulWidget {
     required this.mode, // 'Random Direction', 'Random Number'
     required this.roundDurationSeconds, // 20, 30, or 45
     required this.paceSpeedSeconds, // 3.5, 2.2, or 1.3
+    this.selectedDirections = const [
+      'FRONT LEFT',
+      'FRONT RIGHT',
+      'MID LEFT',
+      'MID RIGHT',
+      'BACK LEFT',
+      'BACK RIGHT',
+    ],
   });
 
   final String mode;
   final int roundDurationSeconds;
   final double paceSpeedSeconds;
+  final List<String> selectedDirections;
 
   @override
   State<ActiveReactionSessionScreen> createState() => _ActiveReactionSessionScreenState();
@@ -145,6 +154,7 @@ class _ActiveReactionSessionScreenState extends State<ActiveReactionSessionScree
   }
 
   void _triggerNextCue() {
+    HapticFeedback.heavyImpact();
     setState(() {
       _totalReactionsLogged++;
     });
@@ -156,7 +166,11 @@ class _ActiveReactionSessionScreenState extends State<ActiveReactionSessionScree
       });
       _tts.speak(item['voice'] as String);
     } else {
-      final item = _directionCues[_random.nextInt(_directionCues.length)];
+      final activePool = _directionCues
+          .where((c) => widget.selectedDirections.contains(c['label']))
+          .toList();
+      final pool = activePool.isNotEmpty ? activePool : _directionCues;
+      final item = pool[_random.nextInt(pool.length)];
       setState(() {
         _activeCue = item['label']!;
       });
@@ -268,19 +282,53 @@ class _ActiveReactionSessionScreenState extends State<ActiveReactionSessionScree
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, color: Colors.white, size: 28),
+                    icon: const Icon(Icons.close_rounded, color: AppColors.chalkWhite, size: 24),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                     onPressed: () => Navigator.pop(context),
                   ),
-                  Row(
-                    children: [
-                      BadgeTag(label: 'ROUND $_currentRound / $_totalRounds', color: AppColors.primaryGreen),
-                      const SizedBox(width: 10),
-                      BadgeTag(label: widget.mode.toUpperCase(), color: AppColors.cyan),
-                    ],
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Center(
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: [
+                          BadgeTag(
+                            label: 'ROUND $_currentRound / $_totalRounds',
+                            color: AppColors.limeGreen,
+                          ),
+                          BadgeTag(
+                            label: widget.mode.replaceAll('Random ', '').toUpperCase(),
+                            color: AppColors.skyBlue,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  Text(
-                    'REACTIONS: $_totalReactionsLogged',
-                    style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.corkGold.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: AppColors.corkGold.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'REACTIONS: $_totalReactionsLogged',
+                        style: GoogleFonts.jetBrainsMono(
+                          color: AppColors.corkGold,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),

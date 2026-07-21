@@ -1,39 +1,16 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../core/services/storage_service.dart';
+import '../domain/data/drill_catalog.dart';
 import '../domain/entities/drill.dart';
 import '../domain/entities/drill_category.dart';
+import '../domain/entities/daily_workout_plan.dart';
 import '../domain/entities/training_log.dart';
-
-class DailyWorkoutPlan {
-  final String id;
-  final String dayName;
-  final String pillar; // 'Footwork', 'Reaction', 'Technique', 'Physical', 'Recovery'
-  final String title;
-  final String subtitle;
-  final String description;
-  final int durationMinutes;
-  final int xpReward;
-  final String drillId;
-  final String coachFocus;
-  final List<String> targetSkills;
-
-  const DailyWorkoutPlan({
-    required this.id,
-    required this.dayName,
-    required this.pillar,
-    required this.title,
-    required this.subtitle,
-    required this.description,
-    required this.durationMinutes,
-    required this.xpReward,
-    required this.drillId,
-    required this.coachFocus,
-    required this.targetSkills,
-  });
-}
+import '../domain/entities/monthly_report.dart';
 
 class TrainingProvider extends ChangeNotifier {
+  final StorageService _storage;
+
   List<Drill> _drills = [];
   List<DrillCategory> _categories = [];
   List<TrainingLog> _recentLogs = [];
@@ -47,7 +24,6 @@ class TrainingProvider extends ChangeNotifier {
   bool get dailyChallengeCompleted => _dailyChallengeCompleted;
 
   List<Drill> get favoriteDrills {
-    // Task 10: Automatically rank drills based on completions in _recentLogs (Top 3)
     final Map<String, int> completionCounts = {};
     for (final log in _recentLogs) {
       completionCounts[log.title] = (completionCounts[log.title] ?? 0) + 1;
@@ -66,11 +42,11 @@ class TrainingProvider extends ChangeNotifier {
   List<Drill> get footworkDrills => _drills.where((d) => d.categoryId == 'cat_footwork').toList();
   List<Drill> get soloDrills => _drills.where((d) => d.categoryId == 'cat_solo').toList();
 
+  /// Returns today's training plan using day-of-week (Monday=0 through Sunday=6).
+  /// This ensures stable sequential rotation: Monday → plan_mon, Tuesday → plan_tue, etc.
   DailyWorkoutPlan get todaysTrainingPlan {
-    final now = DateTime.now();
-    // Use day of year to get a stable index that rotates daily through the 7 distinct pillar plans
-    final dayOfYear = int.parse("${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}");
-    final index = dayOfYear % _dailyPlans.length;
+    final weekday = DateTime.now().weekday; // 1=Monday ... 7=Sunday
+    final index = (weekday - 1) % _dailyPlans.length;
     return _dailyPlans[index];
   }
 
@@ -82,932 +58,21 @@ class TrainingProvider extends ChangeNotifier {
     );
   }
 
-  TrainingProvider() {
-    _initializeData();
+  TrainingProvider(this._storage) {
+    _initializeCatalog();
     _loadLogs();
   }
 
-  void _initializeData() {
-    _categories = const [
-      DrillCategory(
-        id: 'cat_footwork',
-        emoji: '👣',
-        title: 'Footwork Drills',
-        subtitle: 'Court Coverage & Recovery',
-        drillsCount: '6 Drills',
-      ),
-      DrillCategory(
-        id: 'cat_solo',
-        emoji: '🏸',
-        title: 'Solo Drills',
-        subtitle: 'Stroke & Wall Practice',
-        drillsCount: '6 Drills',
-      ),
-      DrillCategory(
-        id: 'cat_reaction',
-        emoji: '⚡',
-        title: 'Reaction Training',
-        subtitle: 'Direction, Color & Number Cues',
-        drillsCount: '3 Modes',
-      ),
-    ];
-
-    _dailyPlans = const [
-      DailyWorkoutPlan(
-        id: 'plan_mon',
-        dayName: 'Monday',
-        pillar: 'Footwork',
-        title: 'Front Court Footwork Mastery',
-        subtitle: 'Net Lunge & Rapid Base Recovery • 12 min',
-        description: 'Focus on explosive net lunges, soft landing mechanics, and returning to base center.',
-        durationMinutes: 12,
-        xpReward: 80,
-        drillId: 'fw_front_court',
-        coachFocus: 'Keep center of gravity low and land soft on front lead heel.',
-        targetSkills: ['Net Lunge Acceleration', 'Recovery Speed', 'Base Center Reset'],
-      ),
-      DailyWorkoutPlan(
-        id: 'plan_tue',
-        dayName: 'Tuesday',
-        pillar: 'Reaction',
-        title: 'Random Direction Reaction Sprint',
-        subtitle: 'Visual Cues & Multi-Direction Agility • 15 min',
-        description: 'Train your brain and footwork for instant multi-directional movement upon visual cues.',
-        durationMinutes: 15,
-        xpReward: 90,
-        drillId: 'fw_split_step',
-        coachFocus: 'Sync pre-hop with cue call for lightning first-step speed.',
-        targetSkills: ['Pre-hop Reaction', 'Decision Speed', 'Explosive First Step'],
-      ),
-      DailyWorkoutPlan(
-        id: 'plan_wed',
-        dayName: 'Wednesday',
-        pillar: 'Technique',
-        title: 'Smash & Jump Power Repetitions',
-        subtitle: 'Wrist Snap Power & Post-Smash Sprint • 15 min',
-        description: 'Master high contact point jump smash mechanics and rapid net attack follow-up.',
-        durationMinutes: 15,
-        xpReward: 100,
-        drillId: 'sd_smash',
-        coachFocus: 'Contact shuttle in front of body at peak jump height.',
-        targetSkills: ['Jump Smash Steepness', 'Wrist Snap Acceleration', 'Post-Smash Recovery'],
-      ),
-      DailyWorkoutPlan(
-        id: 'plan_thu',
-        dayName: 'Thursday',
-        pillar: 'Physical',
-        title: 'Six Corner Full Court Endurance',
-        subtitle: '360° Court Agility & High Cardio • 20 min',
-        description: 'High intensity 6-corner court coverage routine building match-level endurance.',
-        durationMinutes: 20,
-        xpReward: 120,
-        drillId: 'fw_six_corner',
-        coachFocus: 'Pace yourself through rounds and touch base center every rep.',
-        targetSkills: ['Match Stamina', '360° Court Reach', 'Deceleration Control'],
-      ),
-      DailyWorkoutPlan(
-        id: 'plan_fri',
-        dayName: 'Friday',
-        pillar: 'Technique',
-        title: 'Wall Practice Drive Exchanges',
-        subtitle: 'Rapid Drive Reaction & Forearm Power • 10 min',
-        description: 'Develop fast wrist recoil and defensive drive reactions using wall rally drills.',
-        durationMinutes: 10,
-        xpReward: 75,
-        drillId: 'sd_wall',
-        coachFocus: 'Short backswing and tight grip tighten on impact.',
-        targetSkills: ['Wrist Recoil', 'Defense Reaction', 'Flat Drive Control'],
-      ),
-      DailyWorkoutPlan(
-        id: 'plan_sat',
-        dayName: 'Saturday',
-        pillar: 'Footwork',
-        title: 'Rear Court Scissor Kick Routine',
-        subtitle: 'Backpedal & Explosive Scissor Swap • 15 min',
-        description: 'Turn hips sideways, backpedal rapidly, execute scissor kick, and sprint to base.',
-        durationMinutes: 15,
-        xpReward: 95,
-        drillId: 'fw_rear_court',
-        coachFocus: 'Turn hips 90 degrees before backpedaling to prevent ankle injury.',
-        targetSkills: ['Sideways Hip Turn', 'Scissor Kick Swap', 'Forward Sprint Push'],
-      ),
-      DailyWorkoutPlan(
-        id: 'plan_sun',
-        dayName: 'Sunday',
-        pillar: 'Recovery',
-        title: 'Active Mobility & Serve Precision',
-        subtitle: 'Service Placement & Light Movement • 10 min',
-        description: 'Low-impact active recovery focusing on low serve consistency and body flexibility.',
-        durationMinutes: 10,
-        xpReward: 65,
-        drillId: 'sd_serve',
-        coachFocus: 'Relax thumb and push shuttle smoothly over net tape.',
-        targetSkills: ['T-line Serve Accuracy', 'Active Recovery', 'Focus & Breathing'],
-      ),
-    ];
-
-    _drills = const [
-      // === FOOTWORK DRILLS ===
-      Drill(
-        id: 'fw_front_court',
-        title: 'Front Court Footwork',
-        description: 'Master fast forward chasse steps, net lunges, and recovery back to center base.',
-        objective: 'Reach drop shots early at the net tape and push back explosively to center base.',
-        duration: '12 min',
-        durationSeconds: 720,
-        difficulty: 'Beginner',
-        xpReward: 80,
-        categoryId: 'cat_footwork',
-        categoryName: 'Footwork',
-        emoji: '👣',
-        coachCue: 'Keep your center of gravity low and land soft on your front lead heel.',
-        skillsImproved: ['Net Lunge Acceleration', 'Base Reset Speed', 'Quad Stability'],
-        equipmentRequired: ['Racket', 'Non-marking Shoes', '2 Corner Markers'],
-        safetyReminders: [
-          'Land heel-to-toe on lead leg during lunges to protect knees.',
-          'Keep non-racket arm extended sideways for balance.',
-        ],
-        coachingTips: [
-          'Take small quick steps before lunging.',
-          'Push violently off your front heel to recover to center.',
-        ],
-        instructions: [
-          'Start in center base with knees soft.',
-          'Chasse forward to Net Left or Net Right.',
-          'Execute simulated net drop, then push back to base.',
-        ],
-        commonMistakes: ['Standing tall on recovery step.', 'Jumping into net lunge.'],
-        phases: [
-          DrillPhase(
-            title: 'Setup & Warmup',
-            description: '30 sec explanation and light bounce setup in base position.',
-            durationSeconds: 30,
-            type: PhaseType.explanation,
-          ),
-          DrillPhase(
-            title: 'Round 1 – Net Lunge Flow',
-            description: '45 sec continuous Net Left -> Base -> Net Right -> Base movement.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-            coachTip: 'Land on lead heel first!',
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec hydration and leg shakeout.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 2 – High Tempo Recovery',
-            description: '45 sec increased pace net lunges with rapid recovery push.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-            coachTip: 'Push hard off the front foot!',
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec deep breathing reset.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 3 – Deep Reach Lunge',
-            description: '60 sec extended reach lunges focusing on maximum reach and balance.',
-            durationSeconds: 60,
-            type: PhaseType.work,
-            coachTip: 'Keep chest upright, do not bend waist.',
-          ),
-          DrillPhase(
-            title: 'Coaching Focus',
-            description: '20 sec focus review: Check lead knee alignment and core tightness.',
-            durationSeconds: 20,
-            type: PhaseType.coachCue,
-          ),
-          DrillPhase(
-            title: 'Final Burnout Challenge',
-            description: '45 sec maximum speed net lunge sprints.',
-            durationSeconds: 45,
-            type: PhaseType.finalChallenge,
-            coachTip: 'Give 100% speed to finish strong!',
-          ),
-        ],
-        isFavorite: true,
-      ),
-
-      Drill(
-        id: 'fw_rear_court',
-        title: 'Rear Court Footwork',
-        description: 'Master sideways hip turn, running backpedal, scissor kick, and recovery forward.',
-        objective: 'Travel rapidly to the backline corners and propel forward without losing balance.',
-        duration: '15 min',
-        durationSeconds: 900,
-        difficulty: 'Intermediate',
-        xpReward: 90,
-        categoryId: 'cat_footwork',
-        categoryName: 'Footwork',
-        emoji: '👣',
-        coachCue: 'Turn your hips 90 degrees sideways before moving backwards.',
-        skillsImproved: ['Sideways Hip Turn', 'Scissor Kick Mechanics', 'Forward Recovery Sprint'],
-        equipmentRequired: ['Racket', 'Non-marking Shoes'],
-        safetyReminders: [
-          'Never backpedal facing the net directly to prevent ankle rolls.',
-          'Land softly on non-racket leg after scissor kick.',
-        ],
-        coachingTips: [
-          'Turn body sideways immediately when shuttle goes over head.',
-          'Use scissor kick swap in mid-air to generate forward momentum.',
-        ],
-        instructions: [
-          'Turn body 90 degrees sideways.',
-          'Use chasse or crossover steps to Rear Left or Rear Right.',
-          'Execute scissor kick and land moving forward to base.',
-        ],
-        commonMistakes: ['Backpedaling flat-footed facing front.', 'Off-balance landing.'],
-        phases: [
-          DrillPhase(
-            title: 'Setup & Footwork Review',
-            description: '30 sec review of hip rotation and scissor kick swap.',
-            durationSeconds: 30,
-            type: PhaseType.explanation,
-          ),
-          DrillPhase(
-            title: 'Round 1 – Rear Right Corner',
-            description: '45 sec backpedal -> scissor kick -> sprint forward to base.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-            coachTip: 'Turn hips 90 degrees first!',
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec leg shakeout and rest.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 2 – Rear Left Overhead',
-            description: '45 sec round-the-head backpedal and recovery sprint.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-            coachTip: 'High racket contact point above head!',
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec breathing reset.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 3 – Alternating Back Corners',
-            description: '60 sec alternating Rear Left -> Base -> Rear Right -> Base.',
-            durationSeconds: 60,
-            type: PhaseType.work,
-            coachTip: 'Land on front foot to propel forward!',
-          ),
-          DrillPhase(
-            title: 'Coaching Cue Focus',
-            description: '20 sec focus: Ensure scissor kick weight transfer is fluid.',
-            durationSeconds: 20,
-            type: PhaseType.coachCue,
-          ),
-          DrillPhase(
-            title: 'Final Burnout Challenge',
-            description: '45 sec rapid back-and-forth court sprints.',
-            durationSeconds: 45,
-            type: PhaseType.finalChallenge,
-          ),
-        ],
-      ),
-
-      Drill(
-        id: 'fw_four_corner',
-        title: 'Four Corner Footwork',
-        description: 'Fluid movement routine covering net and rear outer court corners in sequence.',
-        objective: 'Build endurance, coordination, and smooth base recovery across 4 court corners.',
-        duration: '15 min',
-        durationSeconds: 900,
-        difficulty: 'Intermediate',
-        xpReward: 95,
-        categoryId: 'cat_footwork',
-        categoryName: 'Footwork',
-        emoji: '👣',
-        coachCue: 'Maintain steady pace and touch center base between every corner.',
-        skillsImproved: ['4-Corner Agility', 'Cardiovascular Stamina', 'Rhythm & Tempo Control'],
-        equipmentRequired: ['Racket', 'Non-marking Shoes', '4 Corner Cones'],
-        safetyReminders: ['Maintain upright posture during corner turns to protect lower back.'],
-        coachingTips: ['Keep steps light and springy on balls of feet.'],
-        instructions: [
-          'Front Left -> Base -> Front Right -> Base.',
-          'Rear Right -> Base -> Rear Left -> Base.',
-          'Repeat continuously for specified work duration.',
-        ],
-        commonMistakes: ['Cutting corners without touching center base.', 'Tiring early due to erratic pace.'],
-        phases: [
-          DrillPhase(
-            title: 'Drill Setup',
-            description: '30 sec visualization of the 4 court corners.',
-            durationSeconds: 30,
-            type: PhaseType.explanation,
-          ),
-          DrillPhase(
-            title: 'Round 1 – Clockwise Flow',
-            description: '45 sec FL -> Base -> FR -> Base -> RR -> Base -> RL -> Base.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec rest and water break.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 2 – Counter-Clockwise Flow',
-            description: '45 sec FR -> Base -> FL -> Base -> RL -> Base -> RR -> Base.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec rest.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 3 – Dynamic Diagonal Cross',
-            description: '60 sec FL -> RR -> Base -> FR -> RL -> Base.',
-            durationSeconds: 60,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Final Challenge',
-            description: '45 sec high-intensity 4-corner speed challenge.',
-            durationSeconds: 45,
-            type: PhaseType.finalChallenge,
-          ),
-        ],
-        isFavorite: true,
-      ),
-
-      Drill(
-        id: 'fw_six_corner',
-        title: 'Six Corner Footwork',
-        description: 'Complete court coverage including net corners, mid-court drives, and rear corners.',
-        objective: 'Develop complete court agility and instinctive 360-degree footwork recovery.',
-        duration: '20 min',
-        durationSeconds: 1200,
-        difficulty: 'Advanced',
-        xpReward: 120,
-        categoryId: 'cat_footwork',
-        categoryName: 'Footwork',
-        emoji: '👣',
-        coachCue: 'Stay low so your first step in any direction is explosive.',
-        skillsImproved: ['360° Court Reach', 'Match Stamina', 'Directional Deceleration'],
-        equipmentRequired: ['Racket', 'Non-marking Shoes', '6 Shuttle Markers'],
-        safetyReminders: ['Engage core muscles on abrupt direction shifts.'],
-        coachingTips: ['Keep racket head high even while moving.'],
-        instructions: [
-          'Cover Net Left, Net Right, Mid Left, Mid Right, Rear Left, Rear Right.',
-          'Return to center base after touching each targeted corner.',
-        ],
-        commonMistakes: ['Dragging back foot during mid-court drives.', 'Rising too tall at center base.'],
-        phases: [
-          DrillPhase(
-            title: 'Get Ready',
-            description: '30 sec review of 6-corner court geometry.',
-            durationSeconds: 30,
-            type: PhaseType.explanation,
-          ),
-          DrillPhase(
-            title: 'Round 1 – 6-Corner Warmup',
-            description: '45 sec covering all 6 court positions in order.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec rest.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 2 – Mid & Net Pressure',
-            description: '45 sec focusing on rapid Front and Mid-court transitions.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec rest.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 3 – Full Court Simulation',
-            description: '60 sec continuous 6-corner rally simulation.',
-            durationSeconds: 60,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Final Burnout Challenge',
-            description: '45 sec maximum speed 6-corner sprint.',
-            durationSeconds: 45,
-            type: PhaseType.finalChallenge,
-          ),
-        ],
-        isFavorite: true,
-      ),
-
-      Drill(
-        id: 'fw_recovery',
-        title: 'Recovery Footwork & Lunge Power',
-        description: 'Focus exclusively on the explosive return step to base after deep lunges.',
-        objective: 'Shorten recovery time from deep lunges to prepare instantly for opponent return.',
-        duration: '10 min',
-        durationSeconds: 600,
-        difficulty: 'Intermediate',
-        xpReward: 75,
-        categoryId: 'cat_footwork',
-        categoryName: 'Footwork',
-        emoji: '👣',
-        coachCue: 'Push hard off your lead foot immediately after stroke contact.',
-        skillsImproved: ['Quad & Glute Power', 'Explosive Recovery Push', 'Balance Under Fatigue'],
-        equipmentRequired: ['Racket', 'Non-marking Shoes'],
-        safetyReminders: ['Keep front knee aligned over second toe.'],
-        coachingTips: ['Use hip drive to pull body weight backward.'],
-        instructions: [
-          'Step into maximum reach front lunge.',
-          'Push violently back using quad and hip muscles to reach base.',
-        ],
-        commonMistakes: ['Pausing at the bottom of the lunge before pushing back.'],
-        phases: [
-          DrillPhase(
-            title: 'Get Ready',
-            description: '30 sec setup & quad activation.',
-            durationSeconds: 30,
-            type: PhaseType.explanation,
-          ),
-          DrillPhase(
-            title: 'Round 1 – Push-Off Technique',
-            description: '45 sec deep lunge & explosive back-push reps.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec rest.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 2 – Rapid Recoil',
-            description: '45 sec high frequency recovery lunges.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Final Burnout Challenge',
-            description: '45 sec non-stop recovery push challenge.',
-            durationSeconds: 45,
-            type: PhaseType.finalChallenge,
-          ),
-        ],
-      ),
-
-      Drill(
-        id: 'fw_split_step',
-        title: 'Split Step Practice',
-        description: 'Practice pre-hop timing, weight distribution, and explosive direction changes.',
-        objective: 'Sync your split-step pre-hop with opponent contact for instant reaction.',
-        duration: '10 min',
-        durationSeconds: 600,
-        difficulty: 'Beginner',
-        xpReward: 70,
-        categoryId: 'cat_footwork',
-        categoryName: 'Footwork',
-        emoji: '👣',
-        coachCue: 'Keep knees soft and feet wider than shoulder width.',
-        skillsImproved: ['Pre-hop Timing', 'Reaction Speed', 'First-Step Acceleration'],
-        equipmentRequired: ['Racket', 'Non-marking Shoes'],
-        safetyReminders: ['Land softly on balls of feet with knees slightly flexed.'],
-        coachingTips: ['The pre-hop is a subtle bounce, not a high jump.'],
-        instructions: [
-          'Perform small pre-hop in base position.',
-          'React instantly in random direction upon landing.',
-        ],
-        commonMistakes: ['Jumping too high in the air.', 'Flat-footed landing.'],
-        phases: [
-          DrillPhase(
-            title: 'Get Ready',
-            description: '30 sec pre-hop timing breakdown.',
-            durationSeconds: 30,
-            type: PhaseType.explanation,
-          ),
-          DrillPhase(
-            title: 'Round 1 – Pre-Hop Rhythm',
-            description: '45 sec continuous split-step pre-hop to side step.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec rest.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 2 – Directional Explosiveness',
-            description: '45 sec split-step into 4 corner bursts.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Final Challenge',
-            description: '45 sec rapid split-step speed test.',
-            durationSeconds: 45,
-            type: PhaseType.finalChallenge,
-          ),
-        ],
-      ),
-
-      // === SOLO DRILLS ===
-      Drill(
-        id: 'sd_shadow',
-        title: 'Shadow Drill Routine',
-        description: 'Simulate full match rally sequences without shuttles focusing on stroke form.',
-        objective: 'Combine footwork and stroke mechanics into realistic rally simulations.',
-        duration: '15 min',
-        durationSeconds: 900,
-        difficulty: 'Intermediate',
-        xpReward: 90,
-        categoryId: 'cat_solo',
-        categoryName: 'Solo Drills',
-        emoji: '🏸',
-        coachCue: 'Visualize the shuttle trajectory on every shadow stroke.',
-        skillsImproved: ['Rally Visualization', 'Stroke-Footwork Integration', 'Tactical Flow'],
-        equipmentRequired: ['Racket', 'Court Space'],
-        safetyReminders: ['Maintain racket head awareness so you do not strike walls or ceilings.'],
-        coachingTips: ['Shadow every shot with realistic racket angle and follow-through.'],
-        instructions: [
-          'Simulate serve -> move back -> shadow clear -> move forward -> shadow drop.',
-        ],
-        commonMistakes: ['Half-hearted swings without proper body rotation.'],
-        phases: [
-          DrillPhase(
-            title: 'Get Ready',
-            description: '30 sec rally pattern overview.',
-            durationSeconds: 30,
-            type: PhaseType.explanation,
-          ),
-          DrillPhase(
-            title: 'Round 1 – Defensive Rally Simulation',
-            description: '45 sec clear -> lift -> drive defense flow.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec rest.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 2 – Attacking Rally Simulation',
-            description: '45 sec smash -> net kill -> push attack flow.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec rest.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 3 – Full Match Point Simulation',
-            description: '60 sec continuous 12-shot shadow rally.',
-            durationSeconds: 60,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Final Burnout Challenge',
-            description: '45 sec maximum tempo shadow rally.',
-            durationSeconds: 45,
-            type: PhaseType.finalChallenge,
-          ),
-        ],
-        isFavorite: true,
-      ),
-
-      Drill(
-        id: 'sd_smash',
-        title: 'Smash Repetition Drill',
-        description: 'High-intensity jump smash motion, wrist snap power, and explosive net sprint.',
-        objective: 'Maximize smash steepness, wrist snap power, and quick recovery to net.',
-        duration: '15 min',
-        durationSeconds: 900,
-        difficulty: 'Advanced',
-        xpReward: 100,
-        categoryId: 'cat_solo',
-        categoryName: 'Solo Drills',
-        emoji: '💥',
-        coachCue: 'Contact shuttle in front of body at peak jump height.',
-        skillsImproved: ['Jump Smash Steepness', 'Wrist Snap Acceleration', 'Post-Smash Net Recovery'],
-        equipmentRequired: ['Racket', 'High Clearance Space'],
-        safetyReminders: [
-          'Land softly on both feet after jump smash.',
-          'Warm up shoulder muscles before hard smash swings.',
-        ],
-        coachingTips: ['Keep grip relaxed until the exact instant of shuttle contact.'],
-        instructions: [
-          'Move to rear court, jump, snap wrist down hard, land and sprint forward.',
-        ],
-        commonMistakes: ['Hitting shuttle flat instead of downward.', 'Tensing grip too early.'],
-        phases: [
-          DrillPhase(
-            title: 'Get Ready',
-            description: '30 sec smash mechanics breakdown.',
-            durationSeconds: 30,
-            type: PhaseType.explanation,
-          ),
-          DrillPhase(
-            title: 'Round 1 – Standing Power Smash',
-            description: '45 sec rear court setup & downward wrist snap reps.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec shoulder shakeout.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 2 – Jump Smash & Net Follow-up',
-            description: '45 sec jump smash -> sprint forward to net kill.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec rest.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 3 – Maximum Power Repetitions',
-            description: '60 sec high frequency smash & recovery sequence.',
-            durationSeconds: 60,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Final Challenge',
-            description: '45 sec non-stop smash burnout.',
-            durationSeconds: 45,
-            type: PhaseType.finalChallenge,
-          ),
-        ],
-        isFavorite: true,
-      ),
-
-      Drill(
-        id: 'sd_wall',
-        title: 'Wall Practice Drives',
-        description: 'Rapid drive exchanges off a smooth solid wall to build wrist reaction & defense.',
-        objective: 'Develop lightning-fast wrist recoil and defensive drive reaction speed.',
-        duration: '10 min',
-        durationSeconds: 600,
-        difficulty: 'Intermediate',
-        xpReward: 75,
-        categoryId: 'cat_solo',
-        categoryName: 'Solo Drills',
-        emoji: '🧱',
-        coachCue: 'Tighten grip on impact and keep backswing minimal.',
-        skillsImproved: ['Wrist Recoil Speed', 'Drive Defense Reaction', 'Forearm Strength'],
-        equipmentRequired: ['Racket', '1 Shuttle', 'Smooth Solid Wall'],
-        safetyReminders: ['Maintain safe distance from wall rebound trajectory.'],
-        coachingTips: ['Keep racket head up at chest height at all times.'],
-        instructions: [
-          'Stand 2 meters from wall and rally continuous forehand & backhand flat drives.',
-        ],
-        commonMistakes: ['Using full arm swing instead of compact wrist recoil.'],
-        phases: [
-          DrillPhase(
-            title: 'Get Ready',
-            description: '30 sec wall drive setup.',
-            durationSeconds: 30,
-            type: PhaseType.explanation,
-          ),
-          DrillPhase(
-            title: 'Round 1 – Forehand Wall Drives',
-            description: '45 sec continuous forehand wall drive rally.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec wrist shakeout.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 2 – Backhand Wall Drives',
-            description: '45 sec continuous backhand thumb-push wall rally.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec rest.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 3 – Alternating Drive Exchange',
-            description: '60 sec alternating Forehand <-> Backhand wall drives.',
-            durationSeconds: 60,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Final Burnout Challenge',
-            description: '45 sec maximum speed wall drive rally challenge.',
-            durationSeconds: 45,
-            type: PhaseType.finalChallenge,
-          ),
-        ],
-        isFavorite: true,
-      ),
-
-      Drill(
-        id: 'sd_serve',
-        title: 'Serve Precision Target',
-        description: 'Practice low serve skimming tape and high flick serve depth consistency.',
-        objective: 'Achieve 90%+ serve placement consistency on the service T-line.',
-        duration: '12 min',
-        durationSeconds: 720,
-        difficulty: 'Beginner',
-        xpReward: 70,
-        categoryId: 'cat_solo',
-        categoryName: 'Solo Drills',
-        emoji: '🎯',
-        coachCue: 'Push smoothly with thumb without jerky wrist movement.',
-        skillsImproved: ['Low Serve Tape Clearance', 'Service Precision', 'Flick Serve Disguise'],
-        equipmentRequired: ['Racket', '5 Shuttles', 'Net/Tape Target Marker'],
-        safetyReminders: ['Keep feet stationary on server court line during serve.'],
-        coachingTips: ['Hold shuttle by feathers with delicate thumb/finger grip.'],
-        instructions: [
-          'Set target marker on T-line. Practice 20 low serves and 10 flick serves.',
-        ],
-        commonMistakes: ['Jerky wrist flicking on low serve.', 'Serving above waist height.'],
-        phases: [
-          DrillPhase(
-            title: 'Get Ready',
-            description: '30 sec serve mechanics review.',
-            durationSeconds: 30,
-            type: PhaseType.explanation,
-          ),
-          DrillPhase(
-            title: 'Round 1 – Low Serve Precision',
-            description: '45 sec low serve skimming net tape to T-line.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec rest.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 2 – Flick Serve Disguise',
-            description: '45 sec low serve setup into surprise high flick serve.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Final Challenge',
-            description: '60 sec 10-serve target accuracy challenge.',
-            durationSeconds: 60,
-            type: PhaseType.finalChallenge,
-          ),
-        ],
-      ),
-
-      Drill(
-        id: 'sd_net',
-        title: 'Net Play & Tumbling Drop',
-        description: 'Fine-tune delicate net touches, spins, and aggressive net kills.',
-        objective: 'Master tight net tumbling spins that force opponent lifts.',
-        duration: '10 min',
-        durationSeconds: 600,
-        difficulty: 'Advanced',
-        xpReward: 85,
-        categoryId: 'cat_solo',
-        categoryName: 'Solo Drills',
-        emoji: '🕸️',
-        coachCue: 'Soft hands and loose grip control the net tape.',
-        skillsImproved: ['Soft Hand Control', 'Tumbling Spin Technique', 'Net Kill Timing'],
-        equipmentRequired: ['Racket', 'Net/Tape Marker'],
-        safetyReminders: ['Avoid striking net posts with racket.'],
-        coachingTips: ['Brush racket face across shuttle cork to impart tumbling spin.'],
-        instructions: [
-          'Lunge to net tape, slice across shuttle cork face, recover to base.',
-        ],
-        commonMistakes: ['Gripping racket too hard at net.', 'Reaching late below net tape line.'],
-        phases: [
-          DrillPhase(
-            title: 'Get Ready',
-            description: '30 sec net touch breakdown.',
-            durationSeconds: 30,
-            type: PhaseType.explanation,
-          ),
-          DrillPhase(
-            title: 'Round 1 – Spinning Net Drop',
-            description: '45 sec lunge & slice tumbling net drops.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec rest.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 2 – Net Kill Brush',
-            description: '45 sec high tape interception net kills.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Final Challenge',
-            description: '45 sec alternating net drop <-> net kill challenge.',
-            durationSeconds: 45,
-            type: PhaseType.finalChallenge,
-          ),
-        ],
-      ),
-
-      Drill(
-        id: 'sd_clear',
-        title: 'Clear & Lob Practice',
-        description: 'Deep high clear strokes to send opponents back to boundary line.',
-        objective: 'Generate full court length depth on forehand and backhand clears.',
-        duration: '12 min',
-        durationSeconds: 720,
-        difficulty: 'Intermediate',
-        xpReward: 80,
-        categoryId: 'cat_solo',
-        categoryName: 'Solo Drills',
-        emoji: '🏹',
-        coachCue: 'Extend arm fully at highest reach point.',
-        skillsImproved: ['Overhead Reach', 'Full Court Length Depth', 'Shoulder Rotation'],
-        equipmentRequired: ['Racket', 'Court Space'],
-        safetyReminders: ['Rotate body fully to prevent shoulder strain.'],
-        coachingTips: ['Hit shuttle overhead above racket shoulder.'],
-        instructions: [
-          'Shadow high overhead clears sending shuttle to backline boundary.',
-        ],
-        commonMistakes: ['Striking shuttle behind head line.'],
-        phases: [
-          DrillPhase(
-            title: 'Get Ready',
-            description: '30 sec overhead clear mechanics.',
-            durationSeconds: 30,
-            type: PhaseType.explanation,
-          ),
-          DrillPhase(
-            title: 'Round 1 – High Defensive Clears',
-            description: '45 sec overhead high clear shadow swings.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Rest Interval',
-            description: '20 sec rest.',
-            durationSeconds: 20,
-            type: PhaseType.rest,
-          ),
-          DrillPhase(
-            title: 'Round 2 – Fast Attacking Clears',
-            description: '45 sec punch clear flat trajectory swings.',
-            durationSeconds: 45,
-            type: PhaseType.work,
-          ),
-          DrillPhase(
-            title: 'Final Challenge',
-            description: '60 sec full court clear repetition challenge.',
-            durationSeconds: 60,
-            type: PhaseType.finalChallenge,
-          ),
-        ],
-      ),
-    ];
+  void _initializeCatalog() {
+    _categories = List.from(DrillCatalog.categories);
+    _dailyPlans = List.from(DrillCatalog.dailyPlans);
+    _drills = List.from(DrillCatalog.drills);
   }
 
   Future<void> _loadLogs() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final logsString = prefs.getString('training_logs');
+      await _storage.init();
+      final logsString = await _storage.getString(StorageKeys.trainingLogs);
       if (logsString != null) {
         final List<dynamic> jsonList = jsonDecode(logsString);
         _recentLogs = jsonList.map((j) => TrainingLog.fromJson(j)).toList();
@@ -1025,8 +90,8 @@ class TrainingProvider extends ChangeNotifier {
     _recentLogs = [];
     notifyListeners();
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('training_logs');
+      await _storage.init();
+      await _storage.remove(StorageKeys.trainingLogs);
     } catch (e) {
       debugPrint('Failed to clear logs: $e');
     }
@@ -1037,6 +102,7 @@ class TrainingProvider extends ChangeNotifier {
     required String duration,
     required int xpEarned,
     String category = 'Footwork',
+    int? qualityScore,
   }) async {
     final newLog = TrainingLog(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -1045,15 +111,16 @@ class TrainingProvider extends ChangeNotifier {
       xpEarned: xpEarned,
       date: DateTime.now(),
       category: category,
+      qualityScore: qualityScore,
     );
 
     _recentLogs.insert(0, newLog);
     notifyListeners();
 
     try {
-      final prefs = await SharedPreferences.getInstance();
+      await _storage.init();
       final jsonList = _recentLogs.map((l) => l.toJson()).toList();
-      await prefs.setString('training_logs', jsonEncode(jsonList));
+      await _storage.setString(StorageKeys.trainingLogs, jsonEncode(jsonList));
     } catch (e) {
       debugPrint('Failed to save log: $e');
     }
@@ -1072,5 +139,39 @@ class TrainingProvider extends ChangeNotifier {
     _dailyChallengeCompleted = true;
     notifyListeners();
   }
-}
 
+  MonthlyReport generateMonthlyReport(DateTime month) {
+    final logsForMonth = _recentLogs.where((log) =>
+        log.date.year == month.year && log.date.month == month.month).toList();
+
+    int totalMins = 0;
+    int xp = 0;
+    final Map<String, int> byCategory = {};
+
+    for (final log in logsForMonth) {
+      final mins = int.tryParse(log.duration.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+      totalMins += mins;
+      xp += log.xpEarned;
+      byCategory[log.category] = (byCategory[log.category] ?? 0) + 1;
+    }
+
+    String topCategory = 'None';
+    int topCount = 0;
+    byCategory.forEach((cat, count) {
+      if (count > topCount) {
+        topCount = count;
+        topCategory = cat;
+      }
+    });
+
+    return MonthlyReport(
+      id: 'rep_${month.year}_${month.month}',
+      month: month,
+      totalSessions: logsForMonth.length,
+      totalMinutes: totalMins,
+      xpEarned: xp,
+      mostTrainedCategory: topCategory,
+      sessionsByCategory: byCategory,
+    );
+  }
+}

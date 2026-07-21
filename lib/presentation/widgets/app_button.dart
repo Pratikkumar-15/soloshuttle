@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 
@@ -22,11 +23,18 @@ class AppButton extends StatelessWidget {
   final double height;
   final bool isLoading;
 
+  void _handlePress() {
+    if (onPressed != null) {
+      HapticFeedback.mediumImpact();
+      onPressed!();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (type == AppButtonType.outline) {
       return OutlinedButton(
-        onPressed: isLoading ? null : onPressed,
+        onPressed: isLoading ? null : _handlePress,
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.white,
           side: const BorderSide(color: Colors.white24),
@@ -62,7 +70,7 @@ class AppButton extends StatelessWidget {
       width: double.infinity,
       height: height,
       child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
+        onPressed: isLoading ? null : _handlePress,
         style: ElevatedButton.styleFrom(
           backgroundColor: bgColor,
           foregroundColor: fgColor,

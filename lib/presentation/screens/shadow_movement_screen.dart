@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../theme/app_theme.dart';
-import '../widgets/action_card.dart';
-import 'training_session_screen.dart';
+import '../../core/theme/app_theme.dart';
+import '../widgets/app_card.dart';
+import 'premium_training_session_screen.dart';
 
 class ShadowMovementScreen extends StatelessWidget {
   const ShadowMovementScreen({super.key});
@@ -74,7 +74,10 @@ class ShadowMovementScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const TrainingSessionScreen(),
+                      builder: (_) => const PremiumTrainingSessionScreen(
+                        customTitle: 'Shadow Routine',
+                        customPhases: [],
+                      ),
                     ),
                   );
                 },
@@ -159,8 +162,8 @@ class ShadowMovementScreen extends StatelessWidget {
   }
 
   Widget _structureCard(String number, String title, String description) {
-    return ActionCard(
-      padding: const EdgeInsets.all(16),
+    return AppCard(
+      padding: const EdgeInsets.all(20),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -242,7 +245,8 @@ class ShadowMovementScreen extends StatelessWidget {
   }
 
   Widget _progressionCard() {
-    return ActionCard(
+    return AppCard(
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

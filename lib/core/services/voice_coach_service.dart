@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 class VoiceCoachService {
@@ -125,9 +126,13 @@ class VoiceCoachService {
     }
     try {
       await _tts.stop();
-      await _tts.speak(text);
+      var result = await _tts.speak(text);
+      if (result == 0) {
+        SystemSound.play(SystemSoundType.alert);
+      }
     } catch (e) {
       isSpeaking.value = false;
+      SystemSound.play(SystemSoundType.alert);
       debugPrint('Error speaking text "$text": $e');
     }
   }

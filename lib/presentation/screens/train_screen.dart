@@ -6,16 +6,13 @@ import '../../providers/training_provider.dart';
 import '../widgets/app_card.dart';
 import '../widgets/badge_tag.dart';
 import '../widgets/gradient_hero_card.dart';
-import '../../screens/footwork_screen.dart';
-import '../../screens/drills_screen.dart';
+import 'footwork_screen.dart';
+import 'drills_screen.dart';
 import 'drill_intro_screen.dart';
 import 'reaction_training_screen.dart';
 import 'tutorials_screen.dart';
-import 'physical_training_screen.dart';
 import 'mental_corner_screen.dart';
 import 'tactical_puzzles_screen.dart';
-import 'mirror_mode_screen.dart';
-import 'training_calendar_screen.dart';
 
 class TrainScreen extends StatelessWidget {
   const TrainScreen({super.key});
@@ -58,7 +55,7 @@ class TrainScreen extends StatelessWidget {
             const SizedBox(height: 28),
 
             Text(
-              'Training Hierarchy',
+              'Your Training Arsenal',
               style: GoogleFonts.poppins(
                 color: Colors.white,
                 fontSize: 22,
@@ -67,7 +64,7 @@ class TrainScreen extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Select a training module to begin your practice.',
+              'Choose your focus area and put in the work.',
               style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 13),
             ),
 
@@ -93,7 +90,7 @@ class TrainScreen extends StatelessWidget {
             _buildCategoryCard(
               context,
               title: 'Solo Drills',
-              subtitle: 'Stroke repetition, serve practice, wall drives & fitness',
+              subtitle: 'Stroke repetition, serve practice, wall drives & net control',
               badge: 'Crucial',
               badgeColor: AppColors.cyan,
               icon: Icons.sports_tennis_rounded,
@@ -113,7 +110,7 @@ class TrainScreen extends StatelessWidget {
               badge: 'Interactive',
               badgeColor: AppColors.orange,
               icon: Icons.bolt_rounded,
-              imageAsset: 'assets/images/icons/voice_coach.png',
+              imageAsset: 'assets/images/icons/reaction_drill.png',
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const ReactionTrainingScreen()));
               },
@@ -137,22 +134,7 @@ class TrainScreen extends StatelessWidget {
 
             const SizedBox(height: 14),
 
-            // 5. ATHLETIC & PHYSICAL CONDITIONING
-            _buildCategoryCard(
-              context,
-              title: 'Athletic & Physical Conditioning',
-              subtitle: 'Speed, explosive power, agility, strength, endurance & mobility',
-              badge: 'Fitness',
-              badgeColor: AppColors.red,
-              icon: Icons.fitness_center_rounded,
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const PhysicalTrainingScreen()));
-              },
-            ),
-
-            const SizedBox(height: 14),
-
-            // 6. MENTAL CORNER & PSYCHOLOGY
+            // 5. MENTAL CORNER & PSYCHOLOGY
             _buildCategoryCard(
               context,
               title: 'Mental Corner & Psychology',
@@ -160,6 +142,7 @@ class TrainScreen extends StatelessWidget {
               badge: 'Mindset',
               badgeColor: AppColors.purple,
               icon: Icons.self_improvement_rounded,
+              imageAsset: 'assets/images/icons/mental_corner.png',
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const MentalCornerScreen()));
               },
@@ -167,7 +150,7 @@ class TrainScreen extends StatelessWidget {
 
             const SizedBox(height: 14),
 
-            // 7. TACTICAL IQ PUZZLES
+            // 6. TACTICAL IQ PUZZLES
             _buildCategoryCard(
               context,
               title: 'Tactical IQ Puzzles',
@@ -175,38 +158,9 @@ class TrainScreen extends StatelessWidget {
               badge: 'Tactical',
               badgeColor: AppColors.cyan,
               icon: Icons.extension_rounded,
+              imageAsset: 'assets/images/icons/tactical_puzzles.png',
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const TacticalPuzzlesScreen()));
-              },
-            ),
-
-            const SizedBox(height: 14),
-
-            // 8. MIRROR MODE (WALL SHADOW)
-            _buildCategoryCard(
-              context,
-              title: 'Mirror Mode (Wall Shadow)',
-              subtitle: 'Voice Coach directional callouts facing a wall or mirror',
-              badge: 'Shadow',
-              badgeColor: AppColors.electricGreen,
-              icon: Icons.flip_camera_android_rounded,
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const MirrorModeScreen()));
-              },
-            ),
-
-            const SizedBox(height: 14),
-
-            // 9. TRAINING CALENDAR
-            _buildCategoryCard(
-              context,
-              title: 'Weekly Periodization Calendar',
-              subtitle: '7-day structured training plan & rest day recommendations',
-              badge: 'Calendar',
-              badgeColor: AppColors.primaryGreen,
-              icon: Icons.calendar_month_rounded,
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const TrainingCalendarScreen()));
               },
             ),
           ],
@@ -227,29 +181,36 @@ class TrainScreen extends StatelessWidget {
   }) {
     return AppCard(
       onTap: onTap,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            height: 52,
-            width: 52,
-            padding: const EdgeInsets.all(10),
+            height: 68,
+            width: 68,
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: badgeColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: badgeColor.withValues(alpha: 0.3),
-                width: 1,
+                color: badgeColor.withValues(alpha: 0.35),
+                width: 1.2,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: badgeColor.withValues(alpha: 0.2),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
             child: imageAsset != null
                 ? Image.asset(
                     imageAsset,
                     fit: BoxFit.contain,
-                    errorBuilder: (ctx, err, stack) => Icon(icon, color: badgeColor, size: 26),
+                    errorBuilder: (ctx, err, stack) => Icon(icon, color: badgeColor, size: 34),
                   )
-                : Icon(icon, color: badgeColor, size: 26),
+                : Icon(icon, color: badgeColor, size: 34),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -258,15 +219,16 @@ class TrainScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 BadgeTag(label: badge, color: badgeColor),
-                const SizedBox(height: 5),
+                const SizedBox(height: 6),
                 Text(
                   title,
                   maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 15.5,
+                    color: AppColors.chalkWhite,
+                    fontSize: 17,
                     fontWeight: FontWeight.bold,
-                    height: 1.25,
+                    height: 1.2,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -276,7 +238,7 @@ class TrainScreen extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.poppins(
                     color: AppColors.textMuted,
-                    fontSize: 12,
+                    fontSize: 12.5,
                     height: 1.35,
                   ),
                 ),
@@ -284,7 +246,7 @@ class TrainScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 16),
+          const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 18),
         ],
       ),
     );

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -37,26 +38,30 @@ class _PremiumTrainingSessionScreenState extends State<PremiumTrainingSessionScr
   late final List<DrillPhase> _phases;
   
   int _currentPhaseIndex = 0;
-  late int _secondsRemaining;
   bool _isPaused = false;
   bool _isCompleted = false;
   
   Timer? _timer;
-  int _elapsedTotalSeconds = 0;
-  int _workSecondsTrained = 0;
+
+  // Use ValueNotifiers for rapidly changing timer state
+  final ValueNotifier<int> _secondsRemaining = ValueNotifier<int>(0);
+  final ValueNotifier<int> _elapsedTotalSeconds = ValueNotifier<int>(0);
+  final ValueNotifier<int> _workSecondsTrained = ValueNotifier<int>(0);
 
   static const List<String> _motivationalQuotes = [
-    'Champions finish what they start.',
-    'Stay focused on your footwork.',
-    'One more round to greatness.',
-    'You are improving every minute.',
+    'Champions finish what they start. Keep going!',
+    'Stay focused on your footwork. Keep going!',
+    'One more round to greatness. Keep going!',
+    'You are improving every minute. Keep going!',
+    'Breathe deeply and stay strong. Keep going!',
+    'Push through the fatigue. You got this!',
   ];
 
   @override
   void initState() {
     super.initState();
     _initPhases();
-    _secondsRemaining = _currentPhase.durationSeconds;
+    _secondsRemaining.value = _currentPhase.durationSeconds;
     _startCurrentPhase();
   }
 
@@ -159,7 +164,7 @@ class _PremiumTrainingSessionScreenState extends State<PremiumTrainingSessionScr
 
   void _startCurrentPhase() {
     setState(() {
-      _secondsRemaining = _currentPhase.durationSeconds;
+      _secondsRemaining.value = _currentPhase.durationSeconds;
     });
 
     _speakPhaseInstruction();
@@ -171,52 +176,104 @@ class _PremiumTrainingSessionScreenState extends State<PremiumTrainingSessionScr
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (!mounted || _isPaused || _isCompleted) return;
 
-      setState(() {
-        _elapsedTotalSeconds++;
-        if (_currentPhase.type == PhaseType.work || _currentPhase.type == PhaseType.finalChallenge) {
-          _workSecondsTrained++;
-        }
+      _elapsedTotalSeconds.value++;
+      if (_currentPhase.type == PhaseType.work || _currentPhase.type == PhaseType.finalChallenge) {
+        _workSecondsTrained.value++;
+      }
 
-        if (_secondsRemaining > 1) {
-          _secondsRemaining--;
-          _triggerSecondBasedVoiceCallouts();
-        } else {
-          _advanceToNextPhase();
-        }
-      });
+      if (_secondsRemaining.value > 1) {
+        _secondsRemaining.value--;
+        _triggerSecondBasedVoiceCallouts();
+      } else {
+        _advanceToNextPhase();
+      }
     });
   }
 
   void _triggerSecondBasedVoiceCallouts() {
-    if (_secondsRemaining <= 3 && _secondsRemaining >= 1) {
-      _tts.stop();
-      _tts.speak('$_secondsRemaining');
+    if (_currentPhase.type == PhaseType.work || _currentPhase.type == PhaseType.finalChallenge) {
+      final totalSeconds = _currentPhase.durationSeconds;
+      final elapsedInPhase = totalSeconds - _secondsRemaining.value;
+
+      // After 10 seconds: Direct coaching advice tone
+      if (elapsedInPhase == 10) {
+        final cue = _getFocusCue();
+        _tts.stop();
+        _tts.speak('Remember to $cue');
+        return;
+      }
+
+      // After 20 seconds: Direct coaching warning advice tone
+      if (elapsedInPhase == 20) {
+        final mistake = _getMistakeToAvoid();
+        _tts.stop();
+        _tts.speak('Make sure not to $mistake');
+        return;
+      }
     }
+
+    if (_secondsRemaining.value <= 3 && _secondsRemaining.value >= 1) {
+      HapticFeedback.mediumImpact();
+      _tts.stop();
+      _tts.speak('${_secondsRemaining.value}');
+    }
+  }
+
+  String _getFocusCue() {
+    String cue = 'keep your racket head high and land on your heel.';
+    if (widget.drill != null && widget.drill!.shortFocusCues.isNotEmpty) {
+      final index = _currentPhaseIndex % widget.drill!.shortFocusCues.length;
+      cue = widget.drill!.shortFocusCues[index];
+    } else if (_currentPhase.coachTip != null && _currentPhase.coachTip!.isNotEmpty) {
+      cue = _currentPhase.coachTip!;
+    }
+    if (cue.isNotEmpty) {
+      cue = cue[0].toLowerCase() + cue.substring(1);
+    }
+    return cue;
+  }
+
+  String _getMistakeToAvoid() {
+    String mistake = 'cross your feet or drop your racket arm.';
+    if (widget.drill != null && widget.drill!.shortMistakesToAvoid.isNotEmpty) {
+      final index = _currentPhaseIndex % widget.drill!.shortMistakesToAvoid.length;
+      mistake = widget.drill!.shortMistakesToAvoid[index];
+    }
+    if (mistake.toLowerCase().startsWith("don't ") || mistake.toLowerCase().startsWith("do not ")) {
+      mistake = mistake.substring(mistake.indexOf(' ') + 1);
+    }
+    if (mistake.isNotEmpty) {
+      mistake = mistake[0].toLowerCase() + mistake.substring(1);
+    }
+    return mistake;
   }
 
   void _speakPhaseInstruction() {
     _tts.stop();
+    final quote = _motivationalQuotes[_currentPhaseIndex % _motivationalQuotes.length];
+
     switch (_currentPhase.type) {
       case PhaseType.explanation:
-        _tts.speak('Get ready! Session starting.');
+        _tts.speak('Get ready! Start ${_currentPhase.title}.');
         break;
 
       case PhaseType.work:
       case PhaseType.finalChallenge:
-        _tts.speak('START!');
+        _tts.speak('Start ${_currentPhase.title}!');
         break;
 
       case PhaseType.rest:
-        _tts.speak('REST!');
+        _tts.speak('Rest! $quote');
         break;
 
       case PhaseType.coachCue:
-        _tts.speak('Get ready!');
+        _tts.speak('Get ready for ${_currentPhase.title}.');
         break;
     }
   }
 
   void _advanceToNextPhase() {
+    HapticFeedback.heavyImpact();
     _timer?.cancel();
     if (_currentPhaseIndex < _phases.length - 1) {
       setState(() {
@@ -253,9 +310,9 @@ class _PremiumTrainingSessionScreenState extends State<PremiumTrainingSessionScr
       _currentPhaseIndex = 0;
       _isPaused = false;
       _isCompleted = false;
-      _elapsedTotalSeconds = 0;
-      _workSecondsTrained = 0;
     });
+    _elapsedTotalSeconds.value = 0;
+    _workSecondsTrained.value = 0;
     _startCurrentPhase();
   }
 
@@ -267,21 +324,6 @@ class _PremiumTrainingSessionScreenState extends State<PremiumTrainingSessionScr
       _isCompleted = true;
       _isPaused = false;
     });
-
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final trainingProvider = Provider.of<TrainingProvider>(context, listen: false);
-
-    final xp = widget.drill?.xpReward ?? 90;
-    final minutesTrained = (_workSecondsTrained / 60).ceil().clamp(1, 60);
-
-    userProvider.addXp(xp);
-    userProvider.updateMinutesTrained(minutesTrained);
-    trainingProvider.logCompletedTraining(
-      title: _trainingTitle,
-      duration: '$minutesTrained min',
-      xpEarned: xp,
-      category: widget.drill?.categoryName ?? 'Footwork',
-    );
   }
 
   String get _statusBadgeLabel {
@@ -344,6 +386,9 @@ class _PremiumTrainingSessionScreenState extends State<PremiumTrainingSessionScr
   void dispose() {
     _timer?.cancel();
     _tts.stop();
+    _secondsRemaining.dispose();
+    _elapsedTotalSeconds.dispose();
+    _workSecondsTrained.dispose();
     super.dispose();
   }
 
@@ -351,25 +396,39 @@ class _PremiumTrainingSessionScreenState extends State<PremiumTrainingSessionScr
   Widget build(BuildContext context) {
     if (_isCompleted) {
       final xp = widget.drill?.xpReward ?? 90;
-      final mins = (_workSecondsTrained / 60).ceil().clamp(1, 60);
+      final mins = (_workSecondsTrained.value / 60).ceil().clamp(1, 60);
 
       return SessionReviewScreen(
         drillTitle: _trainingTitle,
         category: widget.drill?.categoryName ?? 'Footwork',
         xpEarned: xp,
         durationMinutes: mins,
-        onFinish: () => Navigator.pop(context),
+        onFinish: (int qualityScore) {
+          final userProvider = Provider.of<UserProvider>(context, listen: false);
+          final trainingProvider = Provider.of<TrainingProvider>(context, listen: false);
+
+          userProvider.addXp(xp, category: widget.drill?.categoryName ?? 'Footwork');
+          userProvider.updateMinutesTrained(mins);
+          trainingProvider.logCompletedTraining(
+            title: _trainingTitle,
+            duration: '$mins min',
+            xpEarned: xp,
+            category: widget.drill?.categoryName ?? 'Footwork',
+            qualityScore: qualityScore,
+          );
+          Navigator.pop(context);
+        },
       );
     }
 
     if (_isPaused) {
       final totalWork = _phases.fold<int>(0, (sum, p) => sum + p.durationSeconds);
-      final pct = totalWork > 0 ? ((_elapsedTotalSeconds / totalWork) * 100).clamp(0.0, 99.0) : 50.0;
-      final remSecs = (totalWork - _elapsedTotalSeconds).clamp(0, 7200);
+      final pct = totalWork > 0 ? ((_elapsedTotalSeconds.value / totalWork) * 100).clamp(0.0, 99.0) : 50.0;
+      final remSecs = (totalWork - _elapsedTotalSeconds.value).clamp(0, 7200);
 
       return PauseScreenOverlay(
         completedPercentage: pct,
-        elapsedFormatted: _formatSeconds(_elapsedTotalSeconds),
+        elapsedFormatted: _formatSeconds(_elapsedTotalSeconds.value),
         remainingFormatted: _formatSeconds(remSecs),
         currentRound: _currentWorkRoundNumber,
         roundsLeft: (_workPhaseCount - _currentWorkRoundNumber).clamp(0, 10),
@@ -512,13 +571,18 @@ class _PremiumTrainingSessionScreenState extends State<PremiumTrainingSessionScr
                       const SizedBox(height: 8),
 
                       // MAIN TIMER RING
-                      TimerRingWidget(
-                        secondsRemaining: _secondsRemaining,
-                        totalSeconds: _currentPhase.durationSeconds,
-                        contextText: _timerContextText,
-                        primaryColor: _statusBadgeColor,
-                        size: 210,
-                        isPaused: _isPaused,
+                      ValueListenableBuilder<int>(
+                        valueListenable: _secondsRemaining,
+                        builder: (context, seconds, child) {
+                          return TimerRingWidget(
+                            secondsRemaining: seconds,
+                            totalSeconds: _currentPhase.durationSeconds,
+                            contextText: _timerContextText,
+                            primaryColor: _statusBadgeColor,
+                            size: 210,
+                            isPaused: _isPaused,
+                          );
+                        },
                       ),
 
                       const SizedBox(height: 18),

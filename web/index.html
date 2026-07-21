@@ -1,46 +1,1254 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-  <base href="$FLUTTER_BASE_HREF">
-
   <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Progress — Badminton Training (Court Form Theme)</title>
+  <meta name="description" content="Professional Badminton Training Mobile App Screen with rich animations, sound FX, ambient BGM, haptics, and sports analytics.">
 
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="soloshuttle">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <style>
+    /* CSS RESET & VARIABLES */
+    :root {
+      --court-bg: #081C16;
+      --card-surface: #0E2A21;
+      --card-surface-hover: #143C2F;
+      --chalk-white: #EEE9DC;
+      --sage-gray: #9CB3A7;
+      --cork-gold: #F0B429;
+      --lime-green: #C4E93D;
+      --sky-blue: #4FB6E8;
+      --soft-violet: #9E8CF2;
+      --coral: #FF6B4A;
+      --teal-sage: #2ECC71;
 
-  <title>soloshuttle</title>
-  <link rel="manifest" href="manifest.json">
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --card-border: 1px solid rgba(196, 233, 61, 0.18);
+      --gold-border: 1px solid rgba(240, 180, 41, 0.7);
+      --border-radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: #030a08;
+      color: var(--chalk-white);
+      font-family: var(--font-body);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    /* TOP DEMO CONTROLS BAR */
+    .demo-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      background: rgba(14, 42, 33, 0.85);
+      backdrop-filter: blur(14px);
+      padding: 10px 22px;
+      border-radius: 30px;
+      border: 1px solid rgba(156, 179, 167, 0.25);
+      box-shadow: 0 12px 35px rgba(0,0,0,0.5);
+      z-index: 20;
+    }
+
+    .demo-bar span {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--sage-gray);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .demo-btn {
+      background: rgba(196, 233, 61, 0.1);
+      color: var(--lime-green);
+      border: 1px solid rgba(196, 233, 61, 0.3);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .demo-btn:hover, .demo-btn.active {
+      background: var(--lime-green);
+      color: #081C16;
+      font-weight: 700;
+      box-shadow: 0 0 15px rgba(196, 233, 61, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .demo-btn.bgm-btn.playing {
+      background: var(--cork-gold);
+      color: #081C16;
+      border-color: var(--cork-gold);
+      box-shadow: 0 0 15px rgba(240, 180, 41, 0.4);
+    }
+
+    /* PHONE FRAME CONTAINER */
+    .phone-container {
+      width: 100%;
+      max-width: 412px;
+      height: 870px;
+      background-color: var(--court-bg);
+      border-radius: 46px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8), 0 0 0 12px #0d1a15, 0 0 0 14px rgba(196, 233, 61, 0.25);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.4s ease;
+    }
+
+    .phone-container.fullscreen {
+      max-width: 100%;
+      height: 100vh;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    /* DYNAMIC ANIMATED COURT LINES & LIGHT SCANNING BACKGROUND */
+    .court-lines-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 48px,
+        rgba(156, 179, 167, 0.04) 48px,
+        rgba(156, 179, 167, 0.04) 50px
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .court-light-sweep {
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 50% 30%, rgba(196, 233, 61, 0.06) 0%, transparent 60%);
+      animation: ambientLightPulse 8s infinite alternate ease-in-out;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    @keyframes ambientLightPulse {
+      0% { transform: scale(1) translateY(0); opacity: 0.5; }
+      100% { transform: scale(1.15) translateY(30px); opacity: 1; }
+    }
+
+    /* STATUS BAR */
+    .status-bar {
+      height: 42px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--sage-gray);
+      z-index: 5;
+      margin-top: 6px;
+    }
+
+    .status-notch {
+      width: 120px;
+      height: 22px;
+      background: #000;
+      border-radius: 0 0 14px 14px;
+    }
+
+    /* APP SCREEN SCROLL */
+    .app-screen {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 20px 100px 20px;
+      position: relative;
+      z-index: 2;
+      scrollbar-width: thin;
+      scrollbar-color: var(--sage-gray) transparent;
+    }
+
+    .app-screen::-webkit-scrollbar {
+      width: 4px;
+    }
+    .app-screen::-webkit-scrollbar-thumb {
+      background: rgba(156, 179, 167, 0.2);
+      border-radius: 4px;
+    }
+
+    /* HEADER */
+    .header-eyebrow {
+      font-family: var(--font-mono);
+      color: var(--cork-gold);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-eyebrow::after {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--cork-gold);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--cork-gold);
+      animation: pulseDot 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 0.4; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.3); }
+    }
+
+    .header-title {
+      font-family: var(--font-display);
+      font-size: 3.6rem;
+      line-height: 0.95;
+      letter-spacing: 0.03em;
+      color: var(--chalk-white);
+      text-transform: uppercase;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    .header-subtitle {
+      font-size: 0.85rem;
+      color: var(--sage-gray);
+      margin-top: 6px;
+      font-weight: 400;
+    }
+
+    /* RANK CARD WITH GLOW & CROSSHATCH */
+    .rank-card {
+      margin-top: 20px;
+      background-color: var(--card-surface);
+      border-radius: var(--border-radius);
+      border: var(--card-border);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      background-image: 
+        linear-gradient(45deg, rgba(156, 179, 167, 0.035) 25%, transparent 25%), 
+        linear-gradient(-45deg, rgba(156, 179, 167, 0.035) 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, rgba(156, 179, 167, 0.035) 75%), 
+        linear-gradient(-45deg, transparent 75%, rgba(156, 179, 167, 0.035) 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    }
+
+    .rank-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(196, 233, 61, 0.35);
+      box-shadow: 0 15px 35px rgba(8, 28, 22, 0.6), 0 0 20px rgba(196, 233, 61, 0.15);
+    }
+
+    .rank-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .rank-pill {
+      display: inline-block;
+      background: rgba(240, 180, 41, 0.14);
+      border: 1px solid rgba(240, 180, 41, 0.4);
+      color: var(--cork-gold);
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      padding: 4px 10px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      box-shadow: 0 0 10px rgba(240, 180, 41, 0.15);
+    }
+
+    .rank-title {
+      font-family: var(--font-display);
+      font-size: 2.3rem;
+      color: var(--chalk-white);
+      margin-top: 6px;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .shuttle-badge {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--court-bg);
+      border: 1.5px solid var(--cork-gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(240, 180, 41, 0.25);
+      position: relative;
+      transition: transform 0.4s ease;
+    }
+
+    .shuttle-badge:hover {
+      transform: rotate(15deg) scale(1.08);
+      box-shadow: 0 0 28px rgba(240, 180, 41, 0.45);
+    }
+
+    .shuttle-badge svg {
+      width: 34px;
+      height: 34px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    }
+
+    .lvl-tag {
+      font-family: var(--font-mono);
+      color: var(--cork-gold);
+      font-size: 0.7rem;
+      font-weight: 700;
+      margin-top: 4px;
+      letter-spacing: 0.1em;
+    }
+
+    /* XP PROGRESS BAR WITH GLOW & SHIMMER */
+    .xp-section {
+      margin-top: 18px;
+    }
+
+    .xp-labels {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      margin-bottom: 6px;
+    }
+
+    .xp-label-left {
+      color: var(--sage-gray);
+      letter-spacing: 0.1em;
+    }
+
+    .xp-label-right {
+      color: var(--chalk-white);
+      font-weight: 700;
+    }
+
+    .progress-bar-track {
+      width: 100%;
+      height: 9px;
+      background: rgba(8, 28, 22, 0.9);
+      border-radius: 5px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 45%;
+      background: linear-gradient(90deg, var(--teal-sage), var(--lime-green));
+      border-radius: 5px;
+      box-shadow: 0 0 12px rgba(196, 233, 61, 0.5);
+      position: relative;
+      transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .progress-bar-fill::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      animation: shimmer 2.5s infinite;
+    }
+
+    @keyframes shimmer {
+      100% { left: 200%; }
+    }
+
+    .xp-note {
+      font-size: 0.72rem;
+      color: var(--sage-gray);
+      font-style: italic;
+      margin-top: 6px;
+    }
+
+    /* 3. SKILL RADAR CARD */
+    .radar-card {
+      margin-top: 18px;
+      background: var(--card-surface);
+      border-radius: var(--border-radius);
+      border: var(--card-border);
+      padding: 22px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .card-eyebrow {
+      font-family: var(--font-mono);
+      color: var(--cork-gold);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      color: var(--chalk-white);
+      letter-spacing: 0.04em;
+      margin-top: 2px;
+    }
+
+    .card-subtitle {
+      font-size: 0.78rem;
+      color: var(--sage-gray);
+      margin-top: 2px;
+      margin-bottom: 14px;
+    }
+
+    .radar-chart-wrap {
+      position: relative;
+      width: 310px;
+      height: 310px;
+    }
+
+    #radarCanvas {
+      width: 310px;
+      height: 310px;
+      cursor: pointer;
+    }
+
+    /* 4. STAT CHIPS GRID WITH MICRO-ANIMATIONS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .stat-chip {
+      background: var(--card-surface);
+      border-radius: 14px;
+      border: 1px solid rgba(156, 179, 167, 0.15);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 74px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-chip:hover {
+      transform: translateY(-3px) scale(1.02);
+      background: var(--card-surface-hover);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .stat-chip:active {
+      transform: scale(0.97);
+    }
+
+    .chip-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chip-label-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chip-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    .chip-name {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--sage-gray);
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .chip-score {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      color: var(--chalk-white);
+      line-height: 1;
+    }
+
+    .chip-bar-track {
+      width: 100%;
+      height: 4px;
+      background: rgba(8, 28, 22, 0.9);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .chip-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* 5. COACH INSIGHT CALLOUT CARD WITH SPARKLE ANIMATION */
+    .insight-card {
+      margin-top: 18px;
+      background: var(--card-surface);
+      border-radius: 16px;
+      border: var(--gold-border);
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      box-shadow: 0 6px 25px rgba(240, 180, 41, 0.12);
+      transition: transform 0.3s ease;
+      cursor: pointer;
+    }
+
+    .insight-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(240, 180, 41, 0.22);
+    }
+
+    .insight-icon-box {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(240, 180, 41, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--cork-gold);
+      flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(240, 180, 41, 0.3);
+      animation: iconFloat 3s infinite ease-in-out;
+    }
+
+    @keyframes iconFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+
+    .insight-text {
+      font-size: 0.82rem;
+      line-height: 1.45;
+      color: var(--chalk-white);
+    }
+
+    .insight-coach-tag {
+      color: var(--cork-gold);
+      font-weight: 700;
+    }
+
+    /* 6. BOTTOM NAVIGATION BAR */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 78px;
+      background: rgba(8, 28, 22, 0.88);
+      backdrop-filter: blur(18px);
+      border-top: 1px solid rgba(156, 179, 167, 0.18);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      align-items: center;
+      z-index: 10;
+      padding-bottom: 8px;
+    }
+
+    .nav-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--sage-gray);
+      text-decoration: none;
+      font-size: 0.68rem;
+      font-family: var(--font-body);
+      font-weight: 500;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+
+    .nav-tab svg {
+      width: 22px;
+      height: 22px;
+      stroke: var(--sage-gray);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: all 0.25s ease;
+    }
+
+    .nav-tab.active {
+      color: var(--lime-green);
+      font-weight: 700;
+    }
+
+    .nav-tab.active svg {
+      stroke: var(--lime-green);
+      transform: translateY(-2px);
+      filter: drop-shadow(0 0 8px rgba(196, 233, 61, 0.6));
+    }
+
+    .nav-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      width: 16px;
+      height: 3px;
+      background: var(--lime-green);
+      border-radius: 2px;
+      box-shadow: 0 0 8px var(--lime-green);
+    }
+
+    /* TUNER PANEL */
+    .tuner-panel {
+      margin-top: 22px;
+      background: var(--card-surface);
+      border: var(--card-border);
+      border-radius: 16px;
+      padding: 16px 20px;
+      width: 100%;
+      max-width: 412px;
+    }
+
+    .tuner-title {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--cork-gold);
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .tuner-sliders {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      font-size: 0.75rem;
+    }
+
+    .slider-group label {
+      display: flex;
+      justify-content: space-between;
+      color: var(--sage-gray);
+      margin-bottom: 3px;
+      font-family: var(--font-mono);
+    }
+
+    .slider-group input {
+      accent-color: var(--lime-green);
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
 
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
-  <script src="flutter_bootstrap.js" async></script>
+  <!-- DEMO CONTROL TOOLBAR WITH SOUND & BGM -->
+  <div class="demo-bar">
+    <span>COURT FORM PREVIEW</span>
+    <button class="demo-btn active" id="btnPhoneView" onclick="toggleViewport('phone')">PHONE FRAME</button>
+    <button class="demo-btn" id="btnFullView" onclick="toggleViewport('full')">FULL SCREEN</button>
+    <button class="demo-btn bgm-btn" id="btnBgm" onclick="toggleBGM()">🎵 AMBIENT BGM: OFF</button>
+    <button class="demo-btn" id="btnSfx" onclick="toggleSFX()">🔊 SOUND FX: ON</button>
+  </div>
+
+  <!-- PHONE CONTAINER -->
+  <div class="phone-container" id="phoneContainer">
+    <!-- DYNAMIC COURT LINE BACKGROUND & AMBIENT GLOW -->
+    <div class="court-lines-bg"></div>
+    <div class="court-light-sweep"></div>
+
+    <!-- STATUS BAR -->
+    <div class="status-bar">
+      <span>09:41</span>
+      <div class="status-notch"></div>
+      <span>5G ⚡ 100%</span>
+    </div>
+
+    <!-- APP SCREEN CONTENT -->
+    <div class="app-screen">
+      
+      <!-- 1. HEADER -->
+      <div class="header-eyebrow">COURT FORM</div>
+      <h1 class="header-title">Progress</h1>
+      <div class="header-subtitle">Alex Chen • Season 04 • 2026</div>
+
+      <!-- 2. RANK CARD -->
+      <div class="rank-card" onclick="triggerHapticAndSound('rank')">
+        <div class="rank-header">
+          <div>
+            <div class="rank-pill">CURRENT RANK</div>
+            <div class="rank-title">Beginner</div>
+          </div>
+          <div class="badge-container" onclick="triggerLevelUpEffect(event)">
+            <div class="shuttle-badge">
+              <svg viewBox="0 0 32 32">
+                <line x1="16" y1="18" x2="16" y2="6" stroke="#EEE9DC" stroke-width="1.8" stroke-linecap="round" />
+                <line x1="13" y1="18" x2="7" y2="8" stroke="#EEE9DC" stroke-width="1.8" stroke-linecap="round" />
+                <line x1="19" y1="18" x2="25" y2="8" stroke="#EEE9DC" stroke-width="1.8" stroke-linecap="round" />
+                <line x1="14.5" y1="18" x2="11" y2="7" stroke="#EEE9DC" stroke-width="1.2" stroke-linecap="round" />
+                <line x1="17.5" y1="18" x2="21" y2="7" stroke="#EEE9DC" stroke-width="1.2" stroke-linecap="round" />
+                <path d="M 8 11 Q 16 13 24 11" fill="none" stroke="#F0B429" stroke-width="1.2" />
+                <path d="M 10 15 Q 16 17 22 15" fill="none" stroke="#F0B429" stroke-width="1.2" />
+                <path d="M 11 20 C 11 25, 21 25, 21 20 Z" fill="#F0B429" stroke="#F0B429" stroke-width="1" />
+              </svg>
+            </div>
+            <div class="lvl-tag">LVL 01</div>
+          </div>
+        </div>
+
+        <!-- XP Progress Bar -->
+        <div class="xp-section">
+          <div class="xp-labels">
+            <span class="xp-label-left">SEASON XP</span>
+            <span class="xp-label-right" id="xpText">225 / 500</span>
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="xpBarFill" style="width: 45%;"></div>
+          </div>
+          <div class="xp-note">275 XP to Intermediate rank</div>
+        </div>
+      </div>
+
+      <!-- 3. SKILL RADAR CARD -->
+      <div class="radar-card">
+        <div class="card-eyebrow">SIX-PILLAR RATING</div>
+        <div class="card-title">Skill Radar</div>
+        <div class="card-subtitle">Based on last 12 logged sessions</div>
+
+        <div class="radar-chart-wrap">
+          <canvas id="radarCanvas" width="310" height="310" onclick="animateRadarEntrance()"></canvas>
+        </div>
+      </div>
+
+      <!-- 4. STAT CHIPS GRID -->
+      <div class="stats-grid" id="statsGrid">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- 5. INSIGHT CALLOUT CARD -->
+      <div class="insight-card" onclick="triggerCoachChime()">
+        <div class="insight-icon-box">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+        </div>
+        <div class="insight-text">
+          <span class="insight-coach-tag">Coach's note — </span>
+          Mental is your lowest pillar at 42. Add a 10-minute visualization drill before your next 3 sessions to close the gap.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 6. BOTTOM NAVIGATION BAR -->
+    <div class="bottom-nav">
+      <div class="nav-tab" onclick="setActiveTab(this)">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <span>Home</span>
+      </div>
+      <div class="nav-tab" onclick="setActiveTab(this)">
+        <svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+        <span>Train</span>
+      </div>
+      <div class="nav-tab active" onclick="setActiveTab(this)">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        <span>Progress</span>
+      </div>
+      <div class="nav-tab" onclick="setActiveTab(this)">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <span>Profile</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTERACTIVE STATS TUNER -->
+  <div class="tuner-panel">
+    <div class="tuner-title">
+      <span>⚡ Interactive Pillar Tuner</span>
+      <button class="demo-btn" style="padding: 2px 8px; font-size: 0.65rem;" onclick="resetStats()">RESET STATS</button>
+    </div>
+    <div class="tuner-sliders" id="tunerSliders"></div>
+  </div>
+
+  <script>
+    // DATA MODEL
+    const defaultPillars = [
+      { name: 'Technical', score: 45, color: '#4FB6E8' },
+      { name: 'Footwork', score: 65, color: '#C4E93D' },
+      { name: 'Tactical', score: 65, color: '#9E8CF2' },
+      { name: 'Physical', score: 50, color: '#FF6B4A' },
+      { name: 'Mental', score: 42, color: '#F0B429' },
+      { name: 'Consistency', score: 58, color: '#2ECC71' }
+    ];
+
+    let pillars = JSON.parse(JSON.stringify(defaultPillars));
+    let animationProgress = 0; // 0 to 1 for entrance animation
+    let animReqId = null;
+    let audioCtx = null;
+    let sfxEnabled = true;
+    let bgmOsc = null;
+    let bgmGain = null;
+    let bgmPlaying = false;
+
+    // WEB AUDIO API SOUND GENERATOR
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playSound(type) {
+      if (!sfxEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'tab') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.exponentialRampToValueAtTime(580, now + 0.08);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === 'tick') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(800, now);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+          osc.start(now);
+          osc.stop(now + 0.04);
+        } else if (type === 'chime') {
+          // Dual harmonic sparkle
+          const osc2 = ctx.createOscillator();
+          const gain2 = ctx.createGain();
+          osc2.connect(gain2);
+          gain2.connect(ctx.destination);
+
+          osc.type = 'sine';
+          osc2.type = 'sine';
+          osc.frequency.setValueAtTime(1046.5, now); // C6
+          osc2.frequency.setValueAtTime(1318.5, now + 0.06); // E6
+
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+          gain2.gain.setValueAtTime(0.2, now + 0.06);
+          gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+          osc.start(now);
+          osc.stop(now + 0.4);
+          osc2.start(now + 0.06);
+          osc2.stop(now + 0.5);
+        } else if (type === 'level') {
+          // Level up fan-fare chime
+          [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.connect(g);
+            g.connect(ctx.destination);
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(freq, now + idx * 0.07);
+            g.gain.setValueAtTime(0.2, now + idx * 0.07);
+            g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.3);
+            o.start(now + idx * 0.07);
+            o.stop(now + idx * 0.07 + 0.3);
+          });
+        }
+      } catch (e) {
+        console.warn('Audio playback error', e);
+      }
+    }
+
+    // HAPTIC VIBRATION
+    function triggerHaptic(duration = 20) {
+      if (navigator.vibrate) {
+        navigator.vibrate(duration);
+      }
+    }
+
+    function triggerHapticAndSound(type) {
+      triggerHaptic(25);
+      playSound(type === 'rank' ? 'chime' : 'tick');
+    }
+
+    function triggerCoachChime() {
+      triggerHaptic([30, 20, 30]);
+      playSound('chime');
+    }
+
+    function triggerLevelUpEffect(e) {
+      e.stopPropagation();
+      triggerHaptic([40, 40, 40]);
+      playSound('level');
+    }
+
+    // BGM SYNTHESIZER
+    function toggleBGM() {
+      const btn = document.getElementById('btnBgm');
+      if (bgmPlaying) {
+        if (bgmGain) {
+          bgmGain.gain.exponentialRampToValueAtTime(0.0001, getAudioContext().currentTime + 0.5);
+          setTimeout(() => {
+            if (bgmOsc) bgmOsc.stop();
+            bgmPlaying = false;
+            btn.classList.remove('playing');
+            btn.innerText = '🎵 AMBIENT BGM: OFF';
+          }, 500);
+        }
+      } else {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        bgmOsc = ctx.createOscillator();
+        bgmGain = ctx.createGain();
+
+        bgmOsc.type = 'sine';
+        bgmOsc.frequency.setValueAtTime(110, now); // Warm A2 drone
+
+        // LFO for ambient pulse
+        const lfo = ctx.createOscillator();
+        const lfoGain = ctx.createGain();
+        lfo.frequency.setValueAtTime(0.2, now); // 0.2Hz slow ambient wave
+        lfoGain.gain.setValueAtTime(15, now);
+        lfo.connect(bgmOsc.frequency);
+        lfo.start(now);
+
+        bgmOsc.connect(bgmGain);
+        bgmGain.connect(ctx.destination);
+        bgmGain.gain.setValueAtTime(0.0001, now);
+        bgmGain.gain.exponentialRampToValueAtTime(0.06, now + 1.5);
+
+        bgmOsc.start(now);
+        bgmPlaying = true;
+        btn.classList.add('playing');
+        btn.innerText = '🎵 AMBIENT BGM: ON 🔊';
+      }
+    }
+
+    function toggleSFX() {
+      sfxEnabled = !sfxEnabled;
+      const btn = document.getElementById('btnSfx');
+      btn.innerText = sfxEnabled ? '🔊 SOUND FX: ON' : '🔇 SOUND FX: OFF';
+      if (sfxEnabled) playSound('tick');
+    }
+
+    // ANIMATED RADAR CHART CANVAS RENDERER
+    function renderRadarChart() {
+      const canvas = document.getElementById('radarCanvas');
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width;
+      const height = canvas.height;
+      const center = { x: width / 2, y: height / 2 };
+      const radius = width / 2 - 52;
+      const numSides = pillars.length;
+      const angleStep = (Math.PI * 2) / numSides;
+
+      ctx.clearRect(0, 0, width, height);
+
+      // 1. Dashed concentric hexagonal court rings
+      for (let step = 1; step <= 5; step++) {
+        const r = radius * (step / 5);
+        ctx.beginPath();
+        ctx.setLineDash([4, 3]);
+        ctx.strokeStyle = 'rgba(156, 179, 167, 0.22)';
+        ctx.lineWidth = 1;
+
+        for (let i = 0; i < numSides; i++) {
+          const angle = i * angleStep - Math.PI / 2;
+          const x = center.x + r * Math.cos(angle);
+          const y = center.y + r * Math.sin(angle);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      }
+      ctx.setLineDash([]); // Reset line dash
+
+      // 2. Axis lines & labels
+      pillars.forEach((p, i) => {
+        const angle = i * angleStep - Math.PI / 2;
+        const x = center.x + radius * Math.cos(angle);
+        const y = center.y + radius * Math.sin(angle);
+
+        ctx.beginPath();
+        ctx.moveTo(center.x, center.y);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = 'rgba(156, 179, 167, 0.18)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        const labelR = radius + 26;
+        const lx = center.x + labelR * Math.cos(angle);
+        const ly = center.y + labelR * Math.sin(angle);
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        ctx.font = '600 9px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#9CB3A7';
+        ctx.fillText(p.name.toUpperCase(), lx, ly - 7);
+
+        // Animated Score counter interpolation
+        const currentDisplayedScore = Math.round(p.score * animationProgress);
+        ctx.font = '700 15px "Bebas Neue", sans-serif';
+        ctx.fillStyle = '#EEE9DC';
+        ctx.fillText(currentDisplayedScore.toString(), lx, ly + 7);
+      });
+
+      // 3. Lime-Green Animated Polygon
+      ctx.beginPath();
+      const points = [];
+      pillars.forEach((p, i) => {
+        const angle = i * angleStep - Math.PI / 2;
+        const targetR = radius * (p.score / 100);
+        const r = targetR * animationProgress; // Smooth scaling
+        const x = center.x + r * Math.cos(angle);
+        const y = center.y + r * Math.sin(angle);
+        points.push({ x, y });
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+
+      // Polygon Fill & Glow
+      ctx.fillStyle = 'rgba(196, 233, 61, 0.28)';
+      ctx.fill();
+
+      ctx.strokeStyle = '#C4E93D';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = 'rgba(196, 233, 61, 0.4)';
+      ctx.shadowBlur = 10;
+      ctx.stroke();
+      ctx.shadowBlur = 0; // Reset shadow blur
+
+      // 4. Sky-Blue Dot Markers at each vertex
+      points.forEach(pt => {
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#4FB6E8';
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#081C16';
+        ctx.fill();
+      });
+
+      // 5. Gold Dot at exact center
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#F0B429';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, 2, 0, Math.PI * 2);
+      ctx.fillStyle = '#081C16';
+      ctx.fill();
+    }
+
+    // ANIMATE ENTRANCE RADAR EXPANSION
+    function animateRadarEntrance() {
+      if (animReqId) cancelAnimationFrame(animReqId);
+      animationProgress = 0;
+      playSound('tick');
+
+      const startTime = performance.now();
+      const duration = 900; // ms
+
+      function step(currentTime) {
+        const elapsed = currentTime - startTime;
+        let progress = elapsed / duration;
+        if (progress > 1) progress = 1;
+
+        // EaseOutCubic timing
+        animationProgress = 1 - Math.pow(1 - progress, 3);
+        renderRadarChart();
+
+        if (progress < 1) {
+          animReqId = requestAnimationFrame(step);
+        }
+      }
+      animReqId = requestAnimationFrame(step);
+    }
+
+    // RENDER STAT CHIPS
+    function renderStatChips() {
+      const container = document.getElementById('statsGrid');
+      container.innerHTML = '';
+
+      pillars.forEach((p, index) => {
+        const chip = document.createElement('div');
+        chip.className = 'stat-chip';
+        chip.onclick = () => {
+          triggerHaptic(20);
+          playSound('tick');
+        };
+        chip.innerHTML = `
+          <div class="chip-top">
+            <div class="chip-label-group">
+              <div class="chip-dot" style="background-color: ${p.color}; color: ${p.color}"></div>
+              <span class="chip-name">${p.name}</span>
+            </div>
+            <span class="chip-score" id="chipScore_${index}">${p.score}</span>
+          </div>
+          <div class="chip-bar-track">
+            <div class="chip-bar-fill" id="chipFill_${index}" style="width: ${p.score}%; background-color: ${p.color}; box-shadow: 0 0 8px ${p.color}"></div>
+          </div>
+        `;
+        container.appendChild(chip);
+      });
+    }
+
+    // RENDER TUNER SLIDERS
+    function renderTuner() {
+      const container = document.getElementById('tunerSliders');
+      container.innerHTML = '';
+
+      pillars.forEach((p, index) => {
+        const group = document.createElement('div');
+        group.className = 'slider-group';
+        group.innerHTML = `
+          <label>
+            <span>${p.name}</span>
+            <span id="sliderVal_${index}">${p.score}</span>
+          </label>
+          <input type="range" min="10" max="100" value="${p.score}" oninput="updateScore(${index}, this.value)">
+        `;
+        container.appendChild(group);
+      });
+    }
+
+    function updateScore(index, value) {
+      pillars[index].score = parseInt(value);
+      document.getElementById(`sliderVal_${index}`).innerText = value;
+      document.getElementById(`chipScore_${index}`).innerText = value;
+      document.getElementById(`chipFill_${index}`).style.width = value + '%';
+      renderRadarChart();
+      triggerHaptic(10);
+      playSound('tick');
+    }
+
+    function resetStats() {
+      pillars = JSON.parse(JSON.stringify(defaultPillars));
+      renderTuner();
+      renderStatChips();
+      animateRadarEntrance();
+      triggerHaptic(30);
+      playSound('chime');
+    }
+
+    // VIEWPORT TOGGLE
+    function toggleViewport(mode) {
+      const container = document.getElementById('phoneContainer');
+      const btnPhone = document.getElementById('btnPhoneView');
+      const btnFull = document.getElementById('btnFullView');
+
+      if (mode === 'full') {
+        container.classList.add('fullscreen');
+        btnFull.classList.add('active');
+        btnPhone.classList.remove('active');
+      } else {
+        container.classList.remove('fullscreen');
+        btnPhone.classList.add('active');
+        btnFull.classList.remove('active');
+      }
+      triggerHaptic(15);
+      playSound('tab');
+    }
+
+    function setActiveTab(el) {
+      document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+      el.classList.add('active');
+      triggerHaptic(25);
+      playSound('tab');
+    }
+
+    // INITIALIZE ON PAGE LOAD
+    window.addEventListener('DOMContentLoaded', () => {
+      renderStatChips();
+      renderTuner();
+      animateRadarEntrance();
+    });
+  </script>
 </body>
 </html>

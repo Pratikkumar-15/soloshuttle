@@ -7,8 +7,9 @@ import '../../providers/training_provider.dart';
 import '../widgets/app_button.dart';
 import '../widgets/badge_tag.dart';
 import '../widgets/section_title.dart';
+import '../widgets/skill_intro_screen.dart';
 import '../widgets/warmup_overlay_screen.dart';
-import 'active_drill_session_screen.dart';
+import 'premium_training_session_screen.dart';
 
 /// Professional AI Sports Coaching Drill Overview Screen
 class DrillIntroScreen extends StatefulWidget {
@@ -131,8 +132,16 @@ class _DrillIntroScreenState extends State<DrillIntroScreen> {
 
               // 8. MOTIVATION SECTION
               _buildMotivationCard(drill),
+              const SizedBox(height: 32),
 
-              const SizedBox(height: 24),
+              if (drill.progression.isNotEmpty) ...[
+                _buildBwfProgressionSection(drill),
+                const SizedBox(height: 32),
+              ],
+              if (drill.completionCriteria.isNotEmpty) ...[
+                _buildCompletionCriteriaSection(drill),
+                const SizedBox(height: 32),
+              ],
             ],
           ),
         ),
@@ -1375,6 +1384,76 @@ class _DrillIntroScreenState extends State<DrillIntroScreen> {
   }
 
   // ==========================================
+  // BWF PROGRESSION SECTION
+  // ==========================================
+  Widget _buildBwfProgressionSection(Drill drill) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionTitle(title: 'BWF Coaching Progression'),
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.cyan.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.cyan.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.trending_up_rounded, color: AppColors.cyan, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  drill.progression,
+                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 13, height: 1.4),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ==========================================
+  // COMPLETION CRITERIA SECTION
+  // ==========================================
+  Widget _buildCompletionCriteriaSection(Drill drill) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionTitle(title: 'Mastery Completion Criteria'),
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.primaryGreen.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.verified_user_rounded, color: AppColors.electricGreen, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  drill.completionCriteria,
+                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 13, height: 1.4, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ==========================================
   // STICKY / PINNED BOTTOM ACTION BAR
   // ==========================================
   Widget _buildStickyBottomBar(BuildContext context, Drill drill) {
@@ -1426,16 +1505,26 @@ class _DrillIntroScreenState extends State<DrillIntroScreen> {
                 text: 'START WORKOUT',
                 icon: Icons.play_arrow_rounded,
                 onPressed: () {
-                  Navigator.pushReplacement(
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => WarmupOverlayScreen(
+                      builder: (warmupContext) => WarmupOverlayScreen(
                         allowSkip: true,
                         onWarmupComplete: () {
                           Navigator.pushReplacement(
-                            context,
+                            warmupContext,
                             MaterialPageRoute(
-                              builder: (_) => ActiveDrillSessionScreen(drill: drill),
+                              builder: (skillContext) => SkillIntroScreen(
+                                drill: drill,
+                                onContinue: () {
+                                  Navigator.pushReplacement(
+                                    skillContext,
+                                    MaterialPageRoute(
+                                      builder: (_) => PremiumTrainingSessionScreen(drill: drill),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                           );
                         },

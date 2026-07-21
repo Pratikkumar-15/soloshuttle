@@ -5,6 +5,7 @@ class TrainingLog {
   final int xpEarned;
   final DateTime date;
   final String category;
+  final int? qualityScore;
 
   const TrainingLog({
     required this.id,
@@ -13,6 +14,7 @@ class TrainingLog {
     required this.xpEarned,
     required this.date,
     this.category = 'Footwork',
+    this.qualityScore,
   });
 
   Map<String, dynamic> toJson() {
@@ -23,6 +25,7 @@ class TrainingLog {
       'xpEarned': xpEarned,
       'date': date.toIso8601String(),
       'category': category,
+      'qualityScore': qualityScore,
     };
   }
 
@@ -34,6 +37,7 @@ class TrainingLog {
       xpEarned: json['xpEarned'] as int,
       date: DateTime.parse(json['date'] as String),
       category: (json['category'] as String?) ?? 'Footwork',
+      qualityScore: json['qualityScore'] as int?,
     );
   }
 }

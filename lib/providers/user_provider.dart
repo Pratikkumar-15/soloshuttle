@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../core/services/storage_service.dart';
 import '../domain/entities/user_profile.dart';
 import '../domain/entities/assessment.dart';
+import '../domain/entities/goal.dart';
 
 class UserProvider extends ChangeNotifier {
+  final StorageService _storage;
+
   UserProfile _user = const UserProfile();
   bool _isInitialized = false;
   bool _hasCompletedOnboarding = false;
@@ -13,19 +16,25 @@ class UserProvider extends ChangeNotifier {
   bool get isInitialized => _isInitialized;
   bool get hasCompletedOnboarding => _hasCompletedOnboarding;
 
-  UserProvider() {
-    _loadUserFromPrefs();
+  UserProvider(this._storage) {
+    _loadUserFromStorage();
   }
 
-  Future<void> _loadUserFromPrefs() async {
+  // ──────────────────────────────────────────────
+  // PERSISTENCE
+  // ──────────────────────────────────────────────
+
+  Future<void> _loadUserFromStorage() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      _hasCompletedOnboarding = prefs.getBool('has_completed_onboarding') ?? false;
-      final userString = prefs.getString('user_profile');
+      await _storage.init();
+      _hasCompletedOnboarding = await _storage.getBool(StorageKeys.hasCompletedOnboarding) ?? false;
+      final userString = await _storage.getString(StorageKeys.userProfile);
       if (userString != null) {
         final Map<String, dynamic> data = jsonDecode(userString);
         _user = UserProfile.fromJson(data);
       }
+      _resetDailyGoalIfNewDay();
+      _resetWeeklyGoalIfNewWeek();
     } catch (e) {
       debugPrint('Failed to load user profile: $e');
     } finally {
@@ -34,15 +43,19 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> _saveUserToPrefs() async {
+  Future<void> _saveUserToStorage() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('has_completed_onboarding', _hasCompletedOnboarding);
-      await prefs.setString('user_profile', jsonEncode(_user.toJson()));
+      await _storage.init();
+      await _storage.setBool(StorageKeys.hasCompletedOnboarding, _hasCompletedOnboarding);
+      await _storage.setString(StorageKeys.userProfile, jsonEncode(_user.toJson()));
     } catch (e) {
       debugPrint('Failed to save user profile: $e');
     }
   }
+
+  // ──────────────────────────────────────────────
+  // ONBOARDING
+  // ──────────────────────────────────────────────
 
   Future<void> completeOnboarding(UserProfile newProfile) async {
     _user = newProfile.copyWith(
@@ -52,7 +65,7 @@ class UserProvider extends ChangeNotifier {
     );
     _hasCompletedOnboarding = true;
     notifyListeners();
-    await _saveUserToPrefs();
+    await _saveUserToStorage();
   }
 
   Future<void> updateFullProfile(UserProfile updatedProfile) async {
@@ -61,14 +74,16 @@ class UserProvider extends ChangeNotifier {
       playerJourneyStage: updatedProfile.calculatedJourneyStage,
     );
     notifyListeners();
-    await _saveUserToPrefs();
+    await _saveUserToStorage();
   }
 
   Future<void> resetOnboarding() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('has_completed_onboarding');
-      await prefs.remove('user_profile');
+      await _storage.init();
+      await _storage.remove(StorageKeys.hasCompletedOnboarding);
+      await _storage.remove(StorageKeys.userProfile);
+      await _storage.remove(StorageKeys.lastDailyGoalDate);
+      await _storage.remove(StorageKeys.weeklyGoalWeekStart);
     } catch (e) {
       debugPrint('Failed to reset prefs: $e');
     }
@@ -76,6 +91,10 @@ class UserProvider extends ChangeNotifier {
     _user = const UserProfile();
     notifyListeners();
   }
+
+  // ──────────────────────────────────────────────
+  // XP & SKILL RATINGS (with diminishing returns)
+  // ──────────────────────────────────────────────
 
   void addXp(int amount, {String? category}) {
     int newXp = _user.currentXp + amount;
@@ -95,32 +114,226 @@ class UserProvider extends ChangeNotifier {
       updatedStreakList.add(todayStr);
     }
 
-    // Update skill ratings based on training category
+    // Update skill ratings with diminishing returns
     final updatedRatings = Map<String, int>.from(_user.skillRatings);
     if (category != null) {
-      final currentCategoryScore = updatedRatings[category] ?? 50;
-      updatedRatings[category] = (currentCategoryScore + 2).clamp(0, 100);
+      updatedRatings[category] = _applyDiminishingReturns(updatedRatings[category] ?? 0);
     }
-    // Consistency rating increases with sessions
-    updatedRatings['Consistency'] = ((updatedRatings['Consistency'] ?? 40) + 1).clamp(0, 100);
+    updatedRatings['Consistency'] = _applyDiminishingReturns(updatedRatings['Consistency'] ?? 0);
+
+    // Update weekly goal tracking
+    final updatedWeeklyGoal = _user.weeklyGoal;
+    final newCompletedSessions = updatedWeeklyGoal.completedSessions + 1;
+    // Count unique training days this week
+    final weekStart = _getWeekStartDate(DateTime.now());
+    final uniqueDaysThisWeek = updatedStreakList
+        .where((dateStr) {
+          final date = DateTime.tryParse(dateStr);
+          return date != null && !date.isBefore(weekStart);
+        })
+        .toSet()
+        .length;
 
     _user = _user.copyWith(
       currentXp: newXp,
       level: newLevel,
       xpNeededForNextLevel: needed,
       completedSessions: _user.completedSessions + 1,
+      currentStreak: _calculateConsecutiveStreak(updatedStreakList),
       skillRatings: updatedRatings,
       streakHistory: updatedStreakList,
       playerJourneyStage: _user.calculatedJourneyStage,
+      weeklyGoal: updatedWeeklyGoal.copyWith(
+        completedSessions: newCompletedSessions,
+        completedDays: uniqueDaysThisWeek,
+        isCompleted: uniqueDaysThisWeek >= updatedWeeklyGoal.targetDays &&
+            newCompletedSessions >= updatedWeeklyGoal.targetSessions,
+      ),
       updatedAt: DateTime.now(),
     );
 
     notifyListeners();
-    _saveUserToPrefs();
+    _saveUserToStorage();
   }
 
+  /// Diminishing returns formula: gain decreases as skill approaches 100.
+  /// At 0: +5, at 50: +3, at 80: +1.5, at 95: +0.5
+  int _applyDiminishingReturns(int currentScore) {
+    final remaining = 100 - currentScore;
+    final gain = (remaining * 0.05).clamp(0.25, 5.0);
+    return (currentScore + gain).round().clamp(0, 100);
+  }
+
+  // ──────────────────────────────────────────────
+  // STREAK CALCULATION (consecutive days)
+  // ──────────────────────────────────────────────
+
+  /// Calculates the current consecutive-day training streak.
+  /// Walks backwards from today, counting each consecutive day present in history.
+  int _calculateConsecutiveStreak(List<String> streakHistory) {
+    if (streakHistory.isEmpty) return 0;
+
+    final dates = streakHistory
+        .map((s) => DateTime.tryParse(s))
+        .whereType<DateTime>()
+        .map((d) => DateTime(d.year, d.month, d.day))
+        .toSet()
+        .toList()
+      ..sort((a, b) => b.compareTo(a));
+
+    if (dates.isEmpty) return 0;
+
+    final today = DateTime.now();
+    final todayNormalized = DateTime(today.year, today.month, today.day);
+
+    // If the most recent training date is not today or yesterday, streak is 0
+    final daysDiff = todayNormalized.difference(dates.first).inDays;
+    if (daysDiff > 1) return 0;
+
+    int streak = 0;
+    DateTime checkDate = daysDiff == 0 ? todayNormalized : todayNormalized.subtract(const Duration(days: 1));
+
+    for (final date in dates) {
+      if (date == checkDate) {
+        streak++;
+        checkDate = checkDate.subtract(const Duration(days: 1));
+      } else if (date.isBefore(checkDate)) {
+        break;
+      }
+    }
+
+    return streak;
+  }
+
+  // ──────────────────────────────────────────────
+  // DAILY GOAL AUTO-RESET
+  // ──────────────────────────────────────────────
+
+  /// Resets daily goal if the stored date differs from today.
+  void _resetDailyGoalIfNewDay() {
+    final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+    _storage.getString(StorageKeys.lastDailyGoalDate).then((lastDate) {
+      if (lastDate != todayStr) {
+        final smartGoal = _generateSmartDailyGoal();
+        _user = _user.copyWith(dailyGoal: smartGoal);
+        _storage.setString(StorageKeys.lastDailyGoalDate, todayStr);
+        notifyListeners();
+        _saveUserToStorage();
+      }
+    });
+  }
+
+  /// Generates an AI-driven daily goal based on training patterns.
+  DailyGoal _generateSmartDailyGoal() {
+    final weekday = DateTime.now().weekday;
+    final weakest = _user.weakestSkill;
+
+    // Recovery day on Sunday or after 4+ consecutive training days
+    if (weekday == 7 || _user.currentStreak >= 4) {
+      return const DailyGoal(
+        id: 'dg_recovery',
+        title: 'Active Recovery Day',
+        description: 'Light mobility work and serve practice',
+        targetMinutes: 10,
+        xpReward: 40,
+        category: 'Recovery',
+      );
+    }
+
+    // Target weakest skill
+    switch (weakest) {
+      case 'Footwork':
+        return const DailyGoal(
+          id: 'dg_footwork',
+          title: 'Footwork Improvement',
+          description: 'Complete 15 minutes of footwork training',
+          targetMinutes: 15,
+          xpReward: 60,
+          category: 'Footwork',
+        );
+      case 'Technical':
+        return const DailyGoal(
+          id: 'dg_technical',
+          title: 'Stroke Technique Focus',
+          description: 'Complete 12 minutes of solo drills',
+          targetMinutes: 12,
+          xpReward: 55,
+          category: 'Technical',
+        );
+      case 'Tactical':
+        return const DailyGoal(
+          id: 'dg_tactical',
+          title: 'Tactical IQ Training',
+          description: 'Solve 5 tactical puzzles',
+          targetMinutes: 10,
+          xpReward: 50,
+          category: 'Tactical',
+        );
+      case 'Physical':
+        return const DailyGoal(
+          id: 'dg_physical',
+          title: 'Physical Conditioning',
+          description: 'Complete 20 minutes of court agility',
+          targetMinutes: 20,
+          xpReward: 70,
+          category: 'Physical',
+        );
+      case 'Mental':
+        return const DailyGoal(
+          id: 'dg_mental',
+          title: 'Mental Sharpness',
+          description: 'Complete focus timer and reaction drill',
+          targetMinutes: 10,
+          xpReward: 45,
+          category: 'Mental',
+        );
+      default:
+        return const DailyGoal(
+          id: 'dg_consistency',
+          title: 'Daily Training Habit',
+          description: 'Complete any 15-minute training session',
+          targetMinutes: 15,
+          xpReward: 50,
+          category: 'Footwork',
+        );
+    }
+  }
+
+  // ──────────────────────────────────────────────
+  // WEEKLY GOAL AUTO-RESET
+  // ──────────────────────────────────────────────
+
+  /// Resets weekly goal if the current week differs from stored week.
+  void _resetWeeklyGoalIfNewWeek() {
+    final currentWeekStart = _getWeekStartDate(DateTime.now()).toIso8601String().substring(0, 10);
+    _storage.getString(StorageKeys.weeklyGoalWeekStart).then((storedWeekStart) {
+      if (storedWeekStart != currentWeekStart) {
+        _user = _user.copyWith(
+          weeklyGoal: WeeklyGoal(
+            id: 'wg_${currentWeekStart.replaceAll('-', '')}',
+            title: 'Weekly ${_user.level >= 5 ? "5" : "4"}-Day Discipline',
+            targetDays: _user.level >= 5 ? 5 : 4,
+            targetSessions: _user.level >= 5 ? 8 : 6,
+          ),
+        );
+        _storage.setString(StorageKeys.weeklyGoalWeekStart, currentWeekStart);
+        notifyListeners();
+        _saveUserToStorage();
+      }
+    });
+  }
+
+  /// Returns the Monday of the current ISO week.
+  DateTime _getWeekStartDate(DateTime date) {
+    final normalized = DateTime(date.year, date.month, date.day);
+    return normalized.subtract(Duration(days: normalized.weekday - 1));
+  }
+
+  // ──────────────────────────────────────────────
+  // MINUTES & DAILY GOAL TRACKING
+  // ──────────────────────────────────────────────
+
   void updateMinutesTrained(int minutes) {
-    // Update daily goal completed minutes
     final currentDailyGoal = _user.dailyGoal;
     final updatedMinutes = currentDailyGoal.completedMinutes + minutes;
     final isDone = updatedMinutes >= currentDailyGoal.targetMinutes;
@@ -134,13 +347,16 @@ class UserProvider extends ChangeNotifier {
       updatedAt: DateTime.now(),
     );
     notifyListeners();
-    _saveUserToPrefs();
+    _saveUserToStorage();
   }
+
+  // ──────────────────────────────────────────────
+  // ASSESSMENTS
+  // ──────────────────────────────────────────────
 
   void logAssessment(Assessment assessment) {
     final updatedHistory = List<Assessment>.from(_user.assessmentHistory)..add(assessment);
-    
-    // Impact skill ratings based on assessment score
+
     final updatedRatings = Map<String, int>.from(_user.skillRatings);
     if (assessment.type.contains('Footwork')) {
       updatedRatings['Footwork'] = (assessment.score.toInt()).clamp(0, 100);
@@ -154,8 +370,12 @@ class UserProvider extends ChangeNotifier {
       updatedAt: DateTime.now(),
     );
     notifyListeners();
-    _saveUserToPrefs();
+    _saveUserToStorage();
   }
+
+  // ──────────────────────────────────────────────
+  // PROFILE UPDATES
+  // ──────────────────────────────────────────────
 
   void updateSkillRating(String skillCategory, int newScore) {
     final updatedRatings = Map<String, int>.from(_user.skillRatings);
@@ -165,18 +385,24 @@ class UserProvider extends ChangeNotifier {
       updatedAt: DateTime.now(),
     );
     notifyListeners();
-    _saveUserToPrefs();
+    _saveUserToStorage();
   }
 
   void updateProfileName(String name) {
     _user = _user.copyWith(name: name, updatedAt: DateTime.now());
     notifyListeners();
-    _saveUserToPrefs();
+    _saveUserToStorage();
   }
 
   void updateDominantHand(String hand) {
     _user = _user.copyWith(dominantHand: hand, updatedAt: DateTime.now());
     notifyListeners();
-    _saveUserToPrefs();
+    _saveUserToStorage();
+  }
+
+  void updateAvatarUrl(String avatarUrl) {
+    _user = _user.copyWith(avatarUrl: avatarUrl, updatedAt: DateTime.now());
+    notifyListeners();
+    _saveUserToStorage();
   }
 }

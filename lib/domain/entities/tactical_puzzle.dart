@@ -23,6 +23,7 @@ class TacticalPuzzle {
   final String shuttleHeight;
   final List<TacticalPuzzleOption> options;
   final String coachTip;
+  final String? detailedExplanation;
 
   const TacticalPuzzle({
     required this.id,
@@ -33,5 +34,6 @@ class TacticalPuzzle {
     required this.shuttleHeight,
     required this.options,
     required this.coachTip,
+    this.detailedExplanation,
   });
 }

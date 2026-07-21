@@ -39,6 +39,7 @@ dependencies:
   flutter_tts: ^4.2.1
   fl_chart: ^0.70.2
   url_launcher: ^6.3.0
+  permission_handler: ^12.0.3
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +68,7 @@ flutter:
   assets:
     - assets/images/
     - assets/images/icons/
+    - assets/images/avatars/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

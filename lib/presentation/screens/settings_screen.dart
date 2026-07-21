@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../providers/settings_provider.dart';
 import '../widgets/app_card.dart';
 import '../widgets/app_button.dart';
+import 'privacy_policy_screen.dart';
 
 import '../../core/services/voice_coach_service.dart';
 
@@ -30,7 +31,7 @@ class SettingsScreen extends StatelessWidget {
       'id': 'female_normal',
       'name': 'Coach Sarah',
       'tag': 'Normal Pitch',
-      'desc': 'Crisp & dynamic athletic guide',
+      'desc': 'Crisp & dynamic badminton guide',
       'sample': 'Stay light on your feet. Recover fast!',
     },
     {
@@ -218,6 +219,13 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(height: 28),
 
               AppButton(
+                text: 'PRIVACY POLICY',
+                type: AppButtonType.outline,
+                icon: Icons.privacy_tip_rounded,
+                onPressed: () => _launchPrivacyPolicy(context),
+              ),
+              const SizedBox(height: 12),
+              AppButton(
                 text: 'CLEAR CACHE',
                 type: AppButtonType.outline,
                 icon: Icons.cleaning_services_rounded,
@@ -249,6 +257,13 @@ class SettingsScreen extends StatelessWidget {
         backgroundColor: AppColors.primaryGreen,
         behavior: SnackBarBehavior.floating,
       ),
+    );
+  }
+
+  void _launchPrivacyPolicy(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
     );
   }
 }

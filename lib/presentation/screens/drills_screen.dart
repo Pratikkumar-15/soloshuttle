@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../core/theme/app_colors.dart';
-import '../providers/training_provider.dart';
-import '../presentation/widgets/app_card.dart';
-import '../presentation/widgets/section_title.dart';
-import '../presentation/widgets/drill_catalog_card.dart';
-import '../presentation/widgets/gradient_hero_card.dart';
-import '../presentation/screens/drill_intro_screen.dart';
+import '../../core/theme/app_colors.dart';
+import '../../providers/training_provider.dart';
+import '../widgets/app_card.dart';
+import '../widgets/section_title.dart';
+import '../widgets/drill_catalog_card.dart';
+import '../widgets/gradient_hero_card.dart';
+import 'drill_intro_screen.dart';
 
 class DrillsScreen extends StatelessWidget {
   const DrillsScreen({super.key});
@@ -92,9 +92,9 @@ class DrillsScreen extends StatelessWidget {
             const SizedBox(height: 32),
 
             // FAVORITE DRILLS (Task 10: Auto-ranked top 3)
-            if (favorites.isNotEmpty) ...[
-              const SectionTitle(title: 'Top Favourite Drills'),
-              const SizedBox(height: 14),
+            const SectionTitle(title: 'Top Favourite Drills'),
+            const SizedBox(height: 14),
+            if (favorites.isNotEmpty)
               SizedBox(
                 height: 140,
                 child: ListView.separated(
@@ -143,9 +143,22 @@ class DrillsScreen extends StatelessWidget {
                     );
                   },
                 ),
+              )
+            else
+              AppCard(
+                borderColor: Colors.white24,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Center(
+                    child: Text(
+                      'Tap the heart on a drill to add it to your quick-access favorites',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 13),
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(height: 24),
-            ],
+            const SizedBox(height: 24),
           ],
         ),
       ),

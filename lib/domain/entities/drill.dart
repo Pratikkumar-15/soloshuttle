@@ -77,6 +77,8 @@ class Drill {
   final String? aiBriefing;
   final List<String> performanceTargets;
   final String? motivationQuote;
+  final String progression;
+  final String completionCriteria;
 
   const Drill({
     required this.id,
@@ -104,6 +106,8 @@ class Drill {
     this.aiBriefing,
     this.performanceTargets = const [],
     this.motivationQuote,
+    this.progression = '',
+    this.completionCriteria = '',
   });
 
   int get totalRoundsCount {
@@ -408,6 +412,8 @@ class Drill {
     String? aiBriefing,
     List<String>? performanceTargets,
     String? motivationQuote,
+    String? progression,
+    String? completionCriteria,
   }) {
     return Drill(
       id: id ?? this.id,
@@ -435,6 +441,8 @@ class Drill {
       aiBriefing: aiBriefing ?? this.aiBriefing,
       performanceTargets: performanceTargets ?? this.performanceTargets,
       motivationQuote: motivationQuote ?? this.motivationQuote,
+      progression: progression ?? this.progression,
+      completionCriteria: completionCriteria ?? this.completionCriteria,
     );
   }
 }

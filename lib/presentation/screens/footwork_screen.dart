@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../core/theme/app_colors.dart';
-import '../providers/training_provider.dart';
-import '../presentation/widgets/drill_catalog_card.dart';
-import '../presentation/widgets/gradient_hero_card.dart';
-import '../presentation/screens/drill_intro_screen.dart';
+import '../../core/theme/app_colors.dart';
+import '../../providers/training_provider.dart';
+import '../widgets/drill_catalog_card.dart';
+import '../widgets/gradient_hero_card.dart';
+import 'drill_intro_screen.dart';
 
 class FootworkScreen extends StatelessWidget {
   const FootworkScreen({super.key});

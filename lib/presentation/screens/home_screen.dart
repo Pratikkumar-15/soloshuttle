@@ -1,24 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../core/theme/app_colors.dart';
-import '../providers/user_provider.dart';
-import '../providers/training_provider.dart';
-import '../providers/ai_coach_provider.dart';
-import '../presentation/widgets/app_card.dart';
-import '../presentation/widgets/gradient_hero_card.dart';
-import '../presentation/widgets/badge_tag.dart';
-import '../presentation/widgets/section_title.dart';
-import '../presentation/screens/drill_intro_screen.dart';
-import '../presentation/screens/reaction_training_screen.dart';
-import '../presentation/screens/tutorials_screen.dart';
-import '../presentation/screens/notifications_screen.dart';
-import '../presentation/screens/ai_coach_screen.dart';
-import '../presentation/screens/physical_training_screen.dart';
-import '../presentation/screens/mental_corner_screen.dart';
-import '../presentation/screens/tactical_puzzles_screen.dart';
-import '../presentation/screens/mirror_mode_screen.dart';
-import '../presentation/screens/training_calendar_screen.dart';
+import '../../core/theme/app_colors.dart';
+import '../../providers/user_provider.dart';
+import '../../providers/training_provider.dart';
+import '../../providers/ai_coach_provider.dart';
+import '../../providers/notification_provider.dart';
+import '../widgets/app_card.dart';
+import '../widgets/gradient_hero_card.dart';
+import '../widgets/badge_tag.dart';
+import '../widgets/section_title.dart';
+import 'drill_intro_screen.dart';
+import 'reaction_training_screen.dart';
+import 'tutorials_screen.dart';
+import 'notifications_screen.dart';
+import 'ai_coach_screen.dart';
+import 'mental_corner_screen.dart';
+import 'tactical_puzzles_screen.dart';
 import 'drills_screen.dart';
 import 'footwork_screen.dart';
 
@@ -77,42 +75,56 @@ class HomeScreen extends StatelessWidget {
                           Navigator.push(context, MaterialPageRoute(builder: (_) => const AiCoachScreen()));
                         },
                       ),
-                      InkWell(
-                        borderRadius: BorderRadius.circular(14),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                      Consumer<NotificationProvider>(
+                        builder: (context, notifProvider, _) {
+                          final unread = notifProvider.unreadCount;
+                          return InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const NotificationsScreen()),
+                              );
+                            },
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white10,
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  child: const Icon(
+                                    Icons.notifications_none_rounded,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                if (unread > 0)
+                                  Positioned(
+                                    right: 2,
+                                    top: 2,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.coral,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Text(
+                                        '$unread',
+                                        style: GoogleFonts.jetBrainsMono(
+                                          color: Colors.white,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
                           );
                         },
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: Colors.white10,
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: const Icon(
-                                Icons.notifications_none_rounded,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Positioned(
-                              right: 4,
-                              top: 4,
-                              child: Container(
-                                height: 9,
-                                width: 9,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.primaryGreen,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
                     ],
                   ),
@@ -142,7 +154,7 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // SMART DAILY GOAL CARD (PRIORITY 3)
+              // SMART DAILY GOAL CARD
               AppCard(
                 backgroundColor: AppColors.surface,
                 borderColor: AppColors.primaryGreen.withValues(alpha: 0.5),
@@ -204,14 +216,14 @@ class HomeScreen extends StatelessWidget {
               const SectionTitle(title: 'Coaching Modules'),
               const SizedBox(height: 14),
 
-              // MODULES GRID
+              // MODULES GRID (Badminton Features Only)
               GridView.count(
                 crossAxisCount: 2,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 1.1,
+                childAspectRatio: 0.95,
                 children: [
                   FeatureCard(
                     image: 'assets/images/icons/solo_drills.png',
@@ -230,7 +242,7 @@ class HomeScreen extends StatelessWidget {
                     },
                   ),
                   FeatureCard(
-                    image: 'assets/images/icons/voice_coach.png',
+                    image: 'assets/images/icons/reaction_drill.png',
                     iconFallback: Icons.bolt_rounded,
                     title: 'Reaction Drill',
                     onTap: () {
@@ -246,15 +258,7 @@ class HomeScreen extends StatelessWidget {
                     },
                   ),
                   FeatureCard(
-                    image: 'assets/images/icons/solo_drills.png',
-                    iconFallback: Icons.fitness_center_rounded,
-                    title: 'Athletic Training',
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const PhysicalTrainingScreen()));
-                    },
-                  ),
-                  FeatureCard(
-                    image: 'assets/images/icons/voice_coach.png',
+                    image: 'assets/images/icons/mental_corner.png',
                     iconFallback: Icons.self_improvement_rounded,
                     title: 'Mental Corner',
                     onTap: () {
@@ -262,54 +266,14 @@ class HomeScreen extends StatelessWidget {
                     },
                   ),
                   FeatureCard(
-                    image: 'assets/images/icons/tutorials.png',
+                    image: 'assets/images/icons/tactical_puzzles.png',
                     iconFallback: Icons.extension_rounded,
                     title: 'Tactical Puzzles',
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const TacticalPuzzlesScreen()));
                     },
                   ),
-                  FeatureCard(
-                    image: 'assets/images/icons/footwork.png',
-                    iconFallback: Icons.flip_camera_android_rounded,
-                    title: 'Mirror Mode',
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const MirrorModeScreen()));
-                    },
-                  ),
                 ],
-              ),
-
-              const SizedBox(height: 24),
-
-              // WEEKLY CALENDAR SHORTCUT CARD
-              AppCard(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const TrainingCalendarScreen()));
-                },
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.purple.withValues(alpha: 0.18),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.calendar_month_rounded, color: AppColors.purple, size: 26),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Weekly Periodization Calendar', style: GoogleFonts.poppins(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
-                          Text('View your 7-day training plan & rest day recommendations', style: GoogleFonts.poppins(color: AppColors.textMuted, fontSize: 11.5)),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 16),
-                  ],
-                ),
               ),
             ],
           ),
@@ -337,25 +301,44 @@ class FeatureCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppCard(
       onTap: onTap,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(
-            image,
-            width: 44,
-            height: 44,
-            fit: BoxFit.contain,
-            errorBuilder: (ctx, err, stack) => Icon(iconFallback, size: 36, color: AppColors.primaryGreen),
+          Container(
+            height: 68,
+            width: 68,
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.limeGreen.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: AppColors.limeGreen.withValues(alpha: 0.25),
+                width: 1,
+              ),
+            ),
+            child: Image.asset(
+              image,
+              fit: BoxFit.contain,
+              errorBuilder: (ctx, err, stack) => Icon(iconFallback, size: 44, color: AppColors.limeGreen),
+            ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                style: GoogleFonts.poppins(
+                  color: AppColors.chalkWhite,
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.3,
+                ),
+              ),
             ),
           ),
         ],
